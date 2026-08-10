@@ -1,8 +1,9 @@
 import { memo } from "react";
 import characterAtlas from "../assets/pixel/characters.png";
-import buildableAtlas from "../assets/pixel/buildables.png";
-import { BUILDABLES } from "../pixel/data";
-import type { BuildableId, NpcId } from "../pixel/types";
+import buildableAtlas from "../assets/pixel/buildables-v2.png";
+import fishingAtlas from "../assets/pixel/fishing.png";
+import { BUILDABLES, FISH_REWARDS } from "../pixel/data";
+import type { BuildableId, FishingReward, NpcId } from "../pixel/types";
 
 type CharacterId = "player" | NpcId;
 
@@ -49,6 +50,30 @@ export const BuildableSprite = memo(function BuildableSprite({
         width: definition.width,
         height: definition.height,
         backgroundImage: `url(${buildableAtlas})`,
+        backgroundPosition: `${x} ${y}`,
+      }}
+      aria-hidden="true"
+    />
+  );
+});
+
+export const FishingSprite = memo(function FishingSprite({
+  type,
+}: {
+  type: "rod" | "bobber" | FishingReward;
+}) {
+  const atlas = type === "rod"
+    ? { atlasColumn: 0, atlasRow: 0 }
+    : type === "bobber"
+      ? { atlasColumn: 1, atlasRow: 0 }
+      : FISH_REWARDS[type];
+  const x = atlas.atlasColumn === 0 ? "0%" : atlas.atlasColumn === 1 ? "50%" : "100%";
+  const y = atlas.atlasRow === 0 ? "0%" : "100%";
+  return (
+    <span
+      className={`fishing-sprite fishing-${type}`}
+      style={{
+        backgroundImage: `url(${fishingAtlas})`,
         backgroundPosition: `${x} ${y}`,
       }}
       aria-hidden="true"

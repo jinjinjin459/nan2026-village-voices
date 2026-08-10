@@ -168,10 +168,81 @@ button.world-character.is-nearby {
   box-shadow: 0 3px 0 rgba(42, 68, 38, 0.25);
   color: #354529;
   font-family: "Malgun Gothic", sans-serif;
+  display: grid;
+  min-width: 58px;
   font-size: 13px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
+}
+
+.npc-name strong {
+  line-height: 1;
+}
+
+.npc-name small {
+  display: none;
+  margin-top: 4px;
+  color: #69715c;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.world-character.is-nearby .npc-name,
+.world-character.is-chatting .npc-name {
+  min-width: 132px;
+}
+
+.world-character.is-nearby .npc-name small,
+.world-character.is-chatting .npc-name small {
+  display: block;
+}
+
+.npc-social-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 112px;
+  z-index: 5;
+  width: max-content;
+  max-width: 165px;
+  padding: 9px 12px;
+  transform: translateX(-50%);
+  border: 3px solid #3f4f2d;
+  border-radius: 8px;
+  background: #fffced;
+  box-shadow: 0 4px 0 rgba(35, 58, 31, .28);
+  color: #354529;
+  font-family: "Malgun Gothic", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  white-space: normal;
+  animation: social-pop .2s steps(2, end);
+}
+
+.npc-dubu .npc-social-bubble {
+  bottom: 168px;
+}
+
+.npc-lulu .npc-social-bubble {
+  bottom: 150px;
+}
+
+.npc-social-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 3px solid #3f4f2d;
+  border-bottom: 3px solid #3f4f2d;
+  background: #fffced;
+}
+
+@keyframes social-pop {
+  from { opacity: 0; transform: translate(-50%, 8px) scale(.9); }
 }
 
 .npc-prompt {
@@ -283,10 +354,10 @@ button.world-character.is-nearby {
   display: flex;
   min-height: 58px;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   padding: 10px 18px;
   font-family: "Malgun Gothic", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 
@@ -309,6 +380,14 @@ button.world-character.is-nearby {
 .resource-wood { color: #a85d29; }
 .resource-stone { color: #777d73; }
 .resource-coins { color: #e9a71f; }
+.resource-fish { color: #3f8ca6; }
+
+.day-display small {
+  margin-left: 8px;
+  color: #70806c;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
 
 .help-button {
   position: fixed;
@@ -722,6 +801,264 @@ kbd {
   font-weight: 900;
 }
 
+.night-tint {
+  position: absolute;
+  inset: 0;
+  z-index: 1850;
+  pointer-events: none;
+  background: rgba(7, 22, 48, .57);
+  mix-blend-mode: multiply;
+  transition: opacity .8s ease;
+}
+
+.night-effects {
+  position: absolute;
+  inset: 0;
+  z-index: 1920;
+  pointer-events: none;
+}
+
+.night-effects i {
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 216, 105, .68) 0 7%, rgba(255, 191, 69, .24) 23%, rgba(255, 178, 56, 0) 68%);
+  mix-blend-mode: screen;
+  animation: lamp-flicker 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes lamp-flicker {
+  from { opacity: .78; transform: translate(-50%, -50%) scale(.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+.phase-night .pixel-brand,
+.phase-night .day-display,
+.phase-night .resource-display,
+.phase-night .quest-panel,
+.phase-night .interaction-prompt,
+.phase-night .build-options {
+  background: #fff1c7;
+  border-color: #193a30;
+  box-shadow: 0 5px 0 rgba(8, 27, 25, .56), inset 0 0 0 3px #d6bd79;
+}
+
+.phase-night .placed-lamp::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  width: 220px;
+  height: 220px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,218,113,.75), rgba(255,190,64,.18) 32%, transparent 68%);
+  mix-blend-mode: screen;
+  animation: lamp-flicker 2s ease-in-out infinite alternate;
+}
+
+.fishing-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 5200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 31, 32, .58);
+}
+
+.fishing-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(250px, .9fr) 1fr;
+  width: min(780px, calc(100vw - 32px));
+  min-height: 360px;
+  overflow: hidden;
+  border: 5px solid #173e32;
+  border-radius: 12px;
+  background: var(--paper);
+  box-shadow: 0 9px 0 rgba(7, 35, 31, .55), inset 0 0 0 4px #dcc787;
+  animation: dialogue-in .18s steps(2, end);
+  font-family: "Malgun Gothic", sans-serif;
+}
+
+.fishing-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 38px;
+  height: 38px;
+  border: 3px solid #315a4a;
+  border-radius: 7px;
+  background: #fffdf1;
+  cursor: pointer;
+  font-size: 22px;
+}
+
+.fishing-scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-right: 4px solid #2b685f;
+  background:
+    linear-gradient(180deg, #94d7dc 0 34%, #3f9caf 35% 47%, #24788f 48% 100%);
+}
+
+.fishing-scene::before,
+.fishing-scene::after {
+  content: "";
+  position: absolute;
+  left: -15%;
+  width: 130%;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, rgba(217,249,239,.85) 0 20px, transparent 20px 38px);
+  animation: water-drift 2.2s linear infinite;
+}
+
+.fishing-scene::before { top: 61%; }
+.fishing-scene::after { top: 78%; animation-direction: reverse; }
+
+@keyframes water-drift {
+  to { transform: translateX(38px); }
+}
+
+.fishing-sprite {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 230px;
+  height: 230px;
+  background-repeat: no-repeat;
+  background-size: 300% 200%;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 7px 1px rgba(18, 54, 53, .35));
+}
+
+.fishing-status-waiting .fishing-bobber,
+.fishing-status-bite .fishing-bobber {
+  animation: bobber-float .7s steps(2, end) infinite;
+}
+
+.fishing-status-bite .fishing-bobber {
+  animation-duration: .2s;
+}
+
+@keyframes bobber-float {
+  50% { transform: translateY(12px); }
+}
+
+.fishing-water-line {
+  position: absolute;
+  right: -20%;
+  bottom: -8%;
+  width: 130%;
+  height: 40%;
+  transform: rotate(-5deg);
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 3px, transparent 3px 14px);
+}
+
+.fishing-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  padding: 44px 42px 34px;
+}
+
+.fishing-copy h2 {
+  margin: 0 0 12px;
+  color: #225245;
+  font-size: 26px;
+}
+
+.fishing-copy p {
+  min-height: 52px;
+  margin: 0 0 24px;
+  color: #657269;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.fishing-action {
+  min-width: 180px;
+  min-height: 50px;
+  padding: 10px 18px;
+  border: 3px solid #194336;
+  border-radius: 8px;
+  background: #3d7f63;
+  box-shadow: 0 5px 0 #194336;
+  color: white;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.fishing-action.is-biting {
+  background: #e76e50;
+  box-shadow: 0 5px 0 #853a2a;
+  animation: bite-pulse .35s steps(2, end) infinite;
+}
+
+@keyframes bite-pulse {
+  50% { transform: scale(1.05); }
+}
+
+.fishing-wait {
+  display: flex;
+  gap: 8px;
+}
+
+.fishing-wait i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #3e8268;
+  animation: wait-dot .8s steps(2, end) infinite;
+}
+
+.fishing-wait i:nth-child(2) { animation-delay: .15s; }
+.fishing-wait i:nth-child(3) { animation-delay: .3s; }
+
+@keyframes wait-dot {
+  50% { transform: translateY(-8px); opacity: .5; }
+}
+
+.sleep-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  background: #071326;
+  color: #fff1be;
+  font-family: "Malgun Gothic", sans-serif;
+  animation: sleep-fade 1.2s ease both;
+}
+
+.sleep-transition span {
+  font-size: 56px;
+  animation: prompt-bob .8s steps(2, end) infinite;
+}
+
+.sleep-transition strong {
+  font-size: 25px;
+}
+
+.sleep-transition small {
+  color: #aebbd1;
+}
+
+@keyframes sleep-fade {
+  0% { opacity: 0; }
+  25%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .reset-button {
   margin-top: 12px;
   border: 0;
@@ -802,6 +1139,12 @@ kbd {
     padding: 9px 12px;
     font-size: 14px;
     text-align: center;
+  }
+
+  .day-display small {
+    display: block;
+    margin: 1px 0 0;
+    font-size: 9px;
   }
 
   .resource-display {
@@ -984,6 +1327,47 @@ kbd {
   .dialogue-heading button {
     width: 31px;
     height: 31px;
+  }
+
+  .npc-social-bubble {
+    max-width: 150px;
+    font-size: 9px;
+  }
+
+  .fishing-layer {
+    padding: 10px;
+  }
+
+  .fishing-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: 220px 1fr;
+    min-height: 520px;
+  }
+
+  .fishing-scene {
+    border-right: 0;
+    border-bottom: 4px solid #2b685f;
+  }
+
+  .fishing-sprite {
+    width: 180px;
+    height: 180px;
+  }
+
+  .fishing-copy {
+    align-items: center;
+    padding: 22px 24px 25px;
+    text-align: center;
+  }
+
+  .fishing-copy h2 {
+    font-size: 21px;
+  }
+
+  .fishing-copy p {
+    min-height: 45px;
+    margin-bottom: 16px;
+    font-size: 12px;
   }
 }
 

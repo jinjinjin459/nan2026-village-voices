@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createInitialSave } from "./data";
+import { TIME_PHASE_MS, createInitialSave } from "./data";
 import {
+  advanceTime,
   canAfford,
   canPlaceAt,
   canStandAt,
@@ -8,19 +9,22 @@ import {
   movePlayer,
   refundResources,
   spendResources,
+  sleepUntilMorning,
 } from "./engine";
+import { createNpcRuntime, stepNpcSimulation } from "./npcSimulation";
 
 describe("pixel village engine", () => {
-  it("blocks the cottage and lets the player cross the central square", () => {
-    expect(canStandAt({ x: 450, y: 180 }, [])).toBe(false);
-    expect(canStandAt({ x: 760, y: 600 }, [])).toBe(true);
+  it("blocks the cottage and water but keeps the central bridge walkable", () => {
+    expect(canStandAt({ x: 1295, y: 260 }, [])).toBe(false);
+    expect(canStandAt({ x: 940, y: 350 }, [])).toBe(false);
+    expect(canStandAt({ x: 1000, y: 650 }, [])).toBe(true);
   });
 
   it("moves on free ground and stops at blocked terrain", () => {
-    const moved = movePlayer({ x: 760, y: 600 }, { x: 20, y: 0 }, []);
-    expect(moved.x).toBe(780);
-    const blocked = movePlayer({ x: 650, y: 230 }, { x: -30, y: 0 }, []);
-    expect(blocked.x).toBe(650);
+    const moved = movePlayer({ x: 1450, y: 700 }, { x: 20, y: 0 }, []);
+    expect(moved.x).toBe(1470);
+    const blocked = movePlayer({ x: 1135, y: 280 }, { x: 30, y: 0 }, []);
+    expect(blocked.x).toBe(1135);
   });
 
   it("spends the exact build cost", () => {
@@ -36,12 +40,37 @@ describe("pixel village engine", () => {
   });
 
   it("allows decoration on open grass but not inside the river", () => {
-    expect(canPlaceAt({ x: 760, y: 790 }, "flower", [])).toBe(true);
-    expect(canPlaceAt({ x: 170, y: 350 }, "flower", [])).toBe(false);
+    expect(canPlaceAt({ x: 1510, y: 900 }, "flower", [])).toBe(true);
+    expect(canPlaceAt({ x: 950, y: 850 }, "flower", [])).toBe(false);
   });
 
   it("keeps solid placed objects collidable", () => {
-    const tree = makePlacement("tree", { x: 760, y: 790 });
-    expect(canStandAt({ x: 760, y: 800 }, [tree])).toBe(false);
+    const tree = makePlacement("tree", { x: 1510, y: 900 });
+    expect(canStandAt({ x: 1510, y: 910 }, [tree])).toBe(false);
+  });
+
+  it("switches day and night every five minutes", () => {
+    const state = createInitialSave(1_000);
+    const night = advanceTime(state, 1_000 + TIME_PHASE_MS);
+    expect(night.phase).toBe("night");
+    expect(night.day).toBe(1);
+    const nextMorning = advanceTime(night, 1_000 + TIME_PHASE_MS * 2);
+    expect(nextMorning.phase).toBe("day");
+    expect(nextMorning.day).toBe(2);
+  });
+
+  it("sleeping advances to a fresh morning", () => {
+    const state = { ...createInitialSave(1_000), phase: "night" as const };
+    const rested = sleepUntilMorning(state, 5_000);
+    expect(rested.day).toBe(2);
+    expect(rested.phase).toBe("day");
+    expect(rested.phaseStartedAt).toBe(5_000);
+  });
+
+  it("lets nearby residents stop and talk to each other", () => {
+    const residents = createNpcRuntime();
+    const next = stepNpcSimulation(residents, "day", [], 10_000, 0.1);
+    expect([next.moka.activity, next.dubu.activity]).toContain("chatting");
+    expect(Boolean(next.moka.bubble || next.dubu.bubble)).toBe(true);
   });
 });

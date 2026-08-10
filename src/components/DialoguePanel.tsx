@@ -6,10 +6,12 @@ import { CharacterSprite } from "./PixelSprite";
 export function DialoguePanel({
   npcId,
   line,
+  context,
   onClose,
 }: {
   npcId: NpcId;
   line: string;
+  context?: string;
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -33,7 +35,7 @@ export function DialoguePanel({
         <div className="dialogue-portrait"><CharacterSprite character={npcId} /></div>
         <div className="dialogue-copy">
           <div className="dialogue-heading">
-            <div><h2 id="pixel-speaker">{npc.name}</h2><span>{npc.role}</span></div>
+            <div><h2 id="pixel-speaker">{npc.name}</h2><span>{context || npc.role}</span></div>
             <button ref={closeRef} type="button" onClick={onClose} aria-label="대화 닫기">×</button>
           </div>
           <p>“{line}”</p>
