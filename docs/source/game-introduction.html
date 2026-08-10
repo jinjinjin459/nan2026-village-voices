@@ -98,6 +98,44 @@
     .scope div { padding:4mm; border-radius:4mm; }
     .scope .in { color:#284c3c; background:#e3f0e4; }
     .scope .out { color:#71675c; background:#f0ece5; }
+    .cover .hero { min-height:92mm; margin:6mm 0 7mm; overflow:hidden; border:.35mm solid #cad8c7; border-radius:6mm; background:#e8eee1 url("../assets/01-village.png") center/contain no-repeat; box-shadow:0 3mm 7mm rgba(61,73,52,.12); }
+    .cover .hero svg { display:none; }
+    .page-how { padding-top:14mm; }
+    .page-how h2,.page-results h2,.page-run h2 { margin-bottom:3mm; font-size:23pt; }
+    .page-how .grid2 { margin-bottom:3mm !important; }
+    .page-how .steps { gap:2mm 4mm; }
+    .page-how .steps article { min-height:23mm; padding:3mm 3mm 2mm 13mm; }
+    .page-how .steps article::before { top:3mm; }
+    .page-how h3[style] { margin-top:4mm !important; }
+    .page-how .facility { padding:3.5mm; }
+    .page-how .facility .icon { width:9mm; height:9mm; margin-bottom:2mm; font-size:13pt; }
+    .page-how .facility h3 { font-size:11.5pt; }
+    .page-how .facility p { font-size:8pt; line-height:1.5; }
+    .page-how > .note { margin-top:3mm !important; padding:2.3mm 3mm; font-size:7.8pt; }
+    .page-results,.page-run { padding-top:14mm; }
+    .page-results .lead { margin-bottom:2mm; font-size:10.5pt; }
+    .page-results .timeline { margin:3mm 0 4mm; }
+    .page-results .scene { padding:4mm; }
+    .page-results .scene .label { margin-bottom:2mm; }
+    .page-results .quote { padding:3mm 4mm; font-size:9.3pt; line-height:1.6; }
+    .page-results .scene .muted { margin-top:2mm !important; font-size:7.7pt; }
+    .page-results .result-row { margin:2mm 0; padding:2.2mm 3mm; }
+    .page-results .result-row span { font-size:8pt; line-height:1.45; }
+    .page-results .grid2 { margin-top:3mm !important; gap:3mm; }
+    .page-results .card { padding:3.5mm; }
+    .page-results .card h3 { font-size:11.2pt; }
+    .page-results .card p,.page-results .card li { font-size:7.8pt; line-height:1.45; }
+    .page-results .card .note { padding:2.2mm 3mm; font-size:7.4pt; }
+    .page-run .grid2 { gap:3mm; }
+    .page-run .grid2[style] { margin-top:3mm !important; }
+    .page-run .card { padding:3.5mm; }
+    .page-run .card h3 { margin-bottom:1.5mm; font-size:11.5pt; }
+    .page-run p,.page-run li { font-size:8pt; line-height:1.5; }
+    .page-run .command { padding:2.3mm 3mm; font-size:7.5pt; line-height:1.5; }
+    .page-run .note { padding:2.3mm 3mm; font-size:7.7pt; }
+    .page-run h3[style] { margin-top:4mm !important; }
+    .page-run .scope div { padding:3mm; }
+    .page-run .scope p { margin-bottom:0; }
     @media print { body { background:white; } .page { margin:0; } a { color:inherit; } }
   </style>
 </head>
@@ -190,7 +228,7 @@
     <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
   </section>
 
-  <section class="page">
+  <section class="page page-how">
     <span class="kicker">03 · HOW TO PLAY</span>
     <h2>3분 안에 완성되는<br>하나의 변화</h2>
     <div class="grid2" style="margin-bottom:6mm">
@@ -217,7 +255,7 @@
     <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
   </section>
 
-  <section class="page">
+  <section class="page page-results">
     <span class="kicker">04 · BEFORE / AFTER</span>
     <h2>플레이어의 판단이<br>주민의 다음 문장을 바꾼다</h2>
     <p class="lead">AI가 결과를 정하는 것이 아닙니다. 시설 버튼을 누르는 순간 게임 코드가 시설·행복·관계·최근 사건을 갱신하고, 다음 대화는 그 새로운 진실을 전달합니다.</p>
@@ -237,7 +275,7 @@
     <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
   </section>
 
-  <section class="page">
+  <section class="page page-run">
     <span class="kicker">05 · RUN & SUBMISSION</span>
     <h2>링크 클릭 한 번으로<br>바로 플레이</h2>
     <div class="grid2">
@@ -262,7 +300,6 @@ npm start</div><p class="muted" style="margin:3mm 0 0">Node.js 20.19 이상 또�
       <div class="in"><b>구현 완료 범위</b><p>주민 3명 · 질문형 대화 · 대화 수첩 · 시설 3종 · 결정론적 상태 변경 · 표정/건설 연출 · Before/After 결과 · AI/안전 대사 이중 경로</p></div>
       <div class="out"><b>의도적으로 제외한 범위</b><p>자유 이동 · 인벤토리 · 경제 · 저장/계정 · 날씨/시간 · NPC 스케줄 · 장기 기억 · NPC 간 자율 대화 · 멀티플레이</p></div>
     </div>
-    <div class="note" style="margin-top:5mm"><b>브라우저 문제 해결</b>　화면이 갱신되지 않으면 강력 새로고침 후 다시 접속합니다. AI 연결 표시가 “안전 데모”여도 게임의 상태 변화와 모든 결말은 동일하게 플레이할 수 있습니다.</div>
     <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
   </section>
 </body>
