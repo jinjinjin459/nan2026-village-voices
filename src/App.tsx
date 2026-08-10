@@ -39,6 +39,12 @@ import { createNpcRuntime, stepNpcSimulation } from "./pixel/npcSimulation";
 import type { Direction, FishingReward, NpcId, NpcRuntime, PixelSave, Point } from "./pixel/types";
 
 const MOVEMENT_KEYS = new Set(["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"]);
+const ACTION_RADIUS = {
+  fish: 150,
+  "enter-home": 135,
+  "exit-home": 120,
+  sleep: 140,
+} as const;
 
 function useViewportSize() {
   const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
@@ -70,7 +76,7 @@ function App() {
   const [dialogue, setDialogue] = useState<{ npcId: NpcId; line: string; context: string } | null>(null);
   const [fishingOpen, setFishingOpen] = useState(false);
   const [sleeping, setSleeping] = useState(false);
-  const [toast, setToast] = useState("새로운 낚시터가 열렸어요!");
+  const [toast, setToast] = useState("서쪽 부두에서 낚시하고, 중앙 집 문으로 들어갈 수 있어요!");
   const [helpOpen, setHelpOpen] = useState(false);
   const [now, setNow] = useState(Date.now);
   const keys = useRef(new Set<string>());
@@ -94,12 +100,12 @@ function App() {
 
   const nearbyAction = useMemo(() => {
     if (game.location === "home") {
-      if (distance(game.player, BED_POINT) < 120) return "sleep" as const;
-      if (distance(game.player, HOME_EXIT) < 105) return "exit-home" as const;
+      if (distance(game.player, BED_POINT) < ACTION_RADIUS.sleep) return "sleep" as const;
+      if (distance(game.player, HOME_EXIT) < ACTION_RADIUS["exit-home"]) return "exit-home" as const;
       return null;
     }
-    if (distance(game.player, FISHING_SPOT) < 125) return "fish" as const;
-    if (distance(game.player, HOUSE_DOOR) < 105) return "enter-home" as const;
+    if (distance(game.player, FISHING_SPOT) < ACTION_RADIUS.fish) return "fish" as const;
+    if (distance(game.player, HOUSE_DOOR) < ACTION_RADIUS["enter-home"]) return "enter-home" as const;
     return null;
   }, [game.location, game.player]);
 
@@ -231,7 +237,7 @@ function App() {
         openNpcDialogue(npcId);
         return;
       }
-      if (distance(current.player, FISHING_SPOT) < 125) {
+      if (distance(current.player, FISHING_SPOT) < ACTION_RADIUS.fish) {
         setFishingOpen(true);
         setGame((state) => ({
           ...state,
@@ -239,18 +245,18 @@ function App() {
         }));
         return;
       }
-      if (distance(current.player, HOUSE_DOOR) < 105) {
+      if (distance(current.player, HOUSE_DOOR) < ACTION_RADIUS["enter-home"]) {
         setGame(enterHome);
         setBuildMode(false);
         setToast("집 안으로 들어왔어요.");
       }
       return;
     }
-    if (distance(current.player, BED_POINT) < 120) {
+    if (distance(current.player, BED_POINT) < ACTION_RADIUS.sleep) {
       setSleeping(true);
       return;
     }
-    if (distance(current.player, HOME_EXIT) < 105) {
+    if (distance(current.player, HOME_EXIT) < ACTION_RADIUS["exit-home"]) {
       setGame(resetToWorld);
       setToast("마을로 나왔어요.");
     }
@@ -393,7 +399,18 @@ function App() {
         : nearbyAction === "exit-home"
           ? "마을로 나가기"
           : nearbyAction === "sleep"
-            ? "침대에서 잠들기"
+             ? "침대에서 잠들기"
+             : null;
+  const promptDetail = nearbyNpc
+    ? "E키 또는 버튼을 눌러요"
+    : nearbyAction === "fish"
+      ? "던지고, 입질이 오면 E키를 다시 눌러요"
+      : nearbyAction === "enter-home"
+        ? "문 앞에서 E키를 눌러요"
+        : nearbyAction === "exit-home"
+          ? "현관문 앞에서 E키를 눌러요"
+          : nearbyAction === "sleep"
+            ? "다음 날 아침까지 푹 쉬어요"
             : null;
 
   return (
@@ -408,8 +425,10 @@ function App() {
         nearbyNpc={nearbyNpc}
         buildMode={buildMode}
         night={game.phase === "night"}
+        nearbyAction={nearbyAction}
         onWorldPointer={handleWorldPointer}
         onNpcInteract={openNpcDialogue}
+        onPrimaryAction={handlePrimaryAction}
       >
         {game.location === "world" ? game.placements.map((item) => (
           <span
@@ -446,7 +465,7 @@ function App() {
 
       {promptLabel && !dialogue && !buildMode && !fishingOpen ? (
         <button className="interaction-prompt" type="button" onClick={handlePrimaryAction}>
-          <kbd>E</kbd><span><strong>{promptLabel}</strong></span>
+          <kbd>E</kbd><span><strong>{promptLabel}</strong>{promptDetail ? <small>{promptDetail}</small> : null}</span>
         </button>
       ) : null}
 
@@ -482,8 +501,9 @@ function App() {
             <dl>
               <div><dt>이동</dt><dd>WASD · 방향키 · 화면 패드</dd></div>
               <div><dt>대화·행동</dt><dd>가까이에서 E</dd></div>
-              <div><dt>낚시</dt><dd>서쪽 부두 끝에서 E</dd></div>
-              <div><dt>수면</dt><dd>집 침대 가까이에서 E</dd></div>
+              <div><dt>낚시</dt><dd>서쪽 부두에서 E → 입질 때 다시 E</dd></div>
+              <div><dt>집</dt><dd>광장 왼쪽 중앙 집 문 앞에서 E</dd></div>
+              <div><dt>수면</dt><dd>집 안 침대 가까이에서 E</dd></div>
               <div><dt>낮과 밤</dt><dd>각각 실제 5분마다 전환</dd></div>
               <div><dt>저장</dt><dd>모든 변화가 자동 저장</dd></div>
             </dl>

@@ -1,7 +1,7 @@
 import { memo, type PointerEvent, type ReactNode } from "react";
 import expandedVillageMap from "../assets/pixel/expanded-village-map.png";
 import houseInterior from "../assets/pixel/house-interior.png";
-import { NPCS, SCENE_SIZE } from "../pixel/data";
+import { BED_POINT, FISHING_SPOT, HOME_EXIT, HOUSE_DOOR, NPCS, SCENE_SIZE } from "../pixel/data";
 import type { Direction, LocationId, NpcId, NpcRuntime, Point } from "../pixel/types";
 import { CharacterSprite } from "./PixelSprite";
 
@@ -21,10 +21,24 @@ interface Props {
   nearbyNpc: NpcId | null;
   buildMode: boolean;
   night: boolean;
+  nearbyAction: LandmarkAction | null;
   children: ReactNode;
   onWorldPointer: (point: Point) => void;
   onNpcInteract: (npcId: NpcId) => void;
+  onPrimaryAction: () => void;
 }
+
+export type LandmarkAction = "fish" | "enter-home" | "exit-home" | "sleep";
+
+const WORLD_LANDMARKS = [
+  { action: "fish", point: FISHING_SPOT, icon: "♒", label: "낚시터" },
+  { action: "enter-home", point: HOUSE_DOOR, icon: "⌂", label: "우리 집" },
+] satisfies Array<{ action: LandmarkAction; point: Point; icon: string; label: string }>;
+
+const HOME_LANDMARKS = [
+  { action: "sleep", point: BED_POINT, icon: "☾", label: "침대" },
+  { action: "exit-home", point: HOME_EXIT, icon: "↡", label: "마을로" },
+] satisfies Array<{ action: LandmarkAction; point: Point; icon: string; label: string }>;
 
 const WORLD_LIGHTS: Point[] = [
   { x: 885, y: 575 },
@@ -44,9 +58,11 @@ export const PixelGameWorld = memo(function PixelGameWorld({
   nearbyNpc,
   buildMode,
   night,
+  nearbyAction,
   children,
   onWorldPointer,
   onNpcInteract,
+  onPrimaryAction,
 }: Props) {
   const scene = SCENE_SIZE[location];
 
@@ -74,6 +90,29 @@ export const PixelGameWorld = memo(function PixelGameWorld({
         }}
       >
         {children}
+
+        {(location === "world" ? WORLD_LANDMARKS : HOME_LANDMARKS).map((landmark) => {
+          const isNearby = nearbyAction === landmark.action;
+          return (
+            <button
+              className={`world-landmark landmark-${landmark.action} ${isNearby ? "is-nearby" : ""}`}
+              data-landmark={landmark.action}
+              key={landmark.action}
+              style={{ left: landmark.point.x, top: landmark.point.y, zIndex: Math.round(landmark.point.y) + 4 }}
+              type="button"
+              disabled={!isNearby}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPrimaryAction();
+              }}
+              aria-label={`${landmark.label}${isNearby ? " 이용하기" : " 위치"}`}
+            >
+              <span aria-hidden="true">{landmark.icon}</span>
+              <strong>{landmark.label}</strong>
+              {isNearby ? <kbd>E</kbd> : null}
+            </button>
+          );
+        })}
 
         {location === "world" ? (Object.keys(NPCS) as NpcId[]).map((id) => {
           const npc = NPCS[id];

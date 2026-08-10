@@ -44,6 +44,20 @@ export function FishingPanel({
     onCatch(caught);
   }
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const key = event.key.toLowerCase();
+      if (key !== "e" && key !== " ") return;
+      event.preventDefault();
+      if (event.repeat) return;
+      if (status === "ready" || status === "escaped") cast();
+      if (status === "bite") pull();
+      if (status === "caught") onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCatch, onClose, seed, status]);
+
   return (
     <div className="fishing-layer" role="dialog" aria-modal="true" aria-labelledby="fishing-title">
       <section className={`fishing-panel fishing-status-${status}`}>
@@ -73,6 +87,7 @@ export function FishingPanel({
           {status === "waiting" ? <div className="fishing-wait"><i /><i /><i /></div> : null}
           {status === "bite" ? <button className="fishing-action is-biting" type="button" onClick={pull}>지금 당기기!</button> : null}
           {status === "caught" ? <button className="fishing-action" type="button" onClick={onClose}>낚시 마치기</button> : null}
+          <small className="fishing-key-hint"><kbd>E</kbd> 또는 <kbd>Space</kbd>로 조작</small>
         </div>
       </section>
     </div>

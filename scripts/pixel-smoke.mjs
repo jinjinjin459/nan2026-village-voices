@@ -6,6 +6,7 @@ import { chromium } from "playwright-core";
 const baseUrl = process.env.PIXEL_BASE_URL || "http://127.0.0.1:4173";
 const executablePath = process.env.CHROME_PATH || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const expandedShot = join(tmpdir(), "nan-pixel-expanded.png");
+const fishingShot = join(tmpdir(), "nan-pixel-fishing.png");
 const homeShot = join(tmpdir(), "nan-pixel-home.png");
 const mobileShot = join(tmpdir(), "nan-pixel-mobile.png");
 const saveKey = "village-voices-pixel-v2";
@@ -75,14 +76,20 @@ async function runDesktop() {
   await updateSave(page, { player: { x: 205, y: 665 }, location: "world", questStage: "catch-fish" });
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(2_900);
+  const fishingLandmark = page.locator('[data-landmark="fish"]');
+  assert.ok(await fishingLandmark.isVisible(), "낚시 포인트 표지판이 보여야 합니다.");
+  assert.ok(await fishingLandmark.isEnabled(), "낚시 포인트 가까이에서 표지판이 활성화되어야 합니다.");
   await page.screenshot({ path: expandedShot, fullPage: false });
   await page.keyboard.press("e");
-  await page.getByRole("button", { name: "낚싯줄 던지기" }).click();
+  await page.getByRole("button", { name: "낚싯줄 던지기" }).waitFor({ state: "visible" });
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: fishingShot, fullPage: false });
+  await page.keyboard.press("e");
   const pull = page.getByRole("button", { name: "지금 당기기!" });
   await pull.waitFor({ state: "visible", timeout: 3_000 });
-  await pull.click();
+  await page.keyboard.press("e");
   assert.match(await page.getByRole("dialog").innerText(), /잡았다/);
-  await page.getByRole("button", { name: "낚시 마치기" }).click();
+  await page.keyboard.press("e");
   assert.match(await page.locator("body").innerText(), /낚시\s+1/);
   await page.waitForTimeout(350);
 
@@ -95,11 +102,17 @@ async function runDesktop() {
   });
   await page.reload({ waitUntil: "networkidle" });
   assert.match(await page.getByTestId("time-phase").innerText(), /밤/);
+  const homeLandmark = page.locator('[data-landmark="enter-home"]');
+  assert.ok(await homeLandmark.isVisible(), "우리 집 문 표지판이 보여야 합니다.");
+  assert.ok(await homeLandmark.isEnabled(), "집 문 가까이에서 입장 표지판이 활성화되어야 합니다.");
   await page.keyboard.press("e");
   await page.locator('[data-location="home"]').waitFor({ state: "visible" });
   await updateSave(page, { player: { x: 350, y: 300 }, location: "home", phase: "night", day: 1 });
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(1_000);
+  const bedLandmark = page.locator('[data-landmark="sleep"]');
+  assert.ok(await bedLandmark.isVisible(), "집 안에서 침대 표지판이 보여야 합니다.");
+  assert.ok(await bedLandmark.isEnabled(), "침대 가까이에서 수면 표지판이 활성화되어야 합니다.");
   await page.screenshot({ path: homeShot, fullPage: false });
   await page.keyboard.press("e");
   await page.locator(".sleep-transition").waitFor({ state: "visible" });
@@ -147,6 +160,7 @@ try {
   console.log(JSON.stringify({
     status: "PASS",
     expanded: expandedShot,
+    fishing: fishingShot,
     home: homeShot,
     mobile: mobileShot,
     flow: "resident social -> move/build -> fish -> enter home -> sleep -> next morning",

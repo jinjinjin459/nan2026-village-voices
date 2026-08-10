@@ -121,6 +121,57 @@ button.world-character.is-nearby {
   pointer-events: auto;
 }
 
+.world-landmark {
+  position: absolute;
+  display: flex;
+  min-width: 116px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 6px 10px;
+  transform: translate(-50%, -145%);
+  border: 3px solid #244f3b;
+  border-radius: 8px;
+  background: rgba(255, 246, 204, .9);
+  box-shadow: 0 4px 0 rgba(20, 52, 34, .45), inset 0 0 0 2px #e2ca83;
+  color: #244f3b;
+  font-family: "Malgun Gothic", sans-serif;
+  font-size: 13px;
+  image-rendering: pixelated;
+  opacity: .8;
+  pointer-events: none;
+}
+
+.world-landmark > span {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 5px;
+  background: #39785a;
+  color: #fff7cf;
+  font-size: 18px;
+}
+
+.world-landmark kbd {
+  min-width: 27px;
+  height: 27px;
+  padding: 0 6px;
+}
+
+.world-landmark.is-nearby {
+  background: #fff2a9;
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: landmark-ready .65s steps(2, end) infinite;
+}
+
+@keyframes landmark-ready {
+  50% { transform: translate(-50%, -155%); }
+}
+
 .character-sprite {
   position: relative;
   display: block;
@@ -472,6 +523,18 @@ button.world-character.is-nearby {
   box-shadow: 0 5px 0 rgba(20,55,31,.38), inset 0 0 0 3px #ebdba8;
   cursor: pointer;
   font-family: "Malgun Gothic", sans-serif;
+}
+
+.interaction-prompt > span {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.interaction-prompt small {
+  color: #68735e;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 kbd {
@@ -1002,6 +1065,23 @@ kbd {
   animation: bite-pulse .35s steps(2, end) infinite;
 }
 
+.fishing-key-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  color: #66746b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.fishing-key-hint kbd {
+  min-width: 27px;
+  height: 27px;
+  padding: 0 6px;
+  font-size: 10px;
+}
+
 @keyframes bite-pulse {
   50% { transform: scale(1.05); }
 }
@@ -1200,6 +1280,12 @@ kbd {
     padding: 6px 10px;
     border-width: 3px;
     font-size: 12px;
+  }
+
+  .world-landmark {
+    min-width: 98px;
+    min-height: 38px;
+    font-size: 11px;
   }
 
   .interaction-prompt kbd {
