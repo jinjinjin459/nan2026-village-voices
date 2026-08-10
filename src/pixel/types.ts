@@ -26,6 +26,61 @@ export interface PlacedItem extends Point {
   type: BuildableId;
 }
 
+export type TreeState = "standing" | "falling" | "stump";
+
+export interface TreeNode extends Point {
+  id: string;
+  state: TreeState;
+  hits: number;
+  choppedDay: number | null;
+}
+
+export interface NpcMemory {
+  id: string;
+  text: string;
+  day: number;
+  source: "player" | "event";
+}
+
+export type VillageEventType = "fishing_festival" | "garden_party" | "campfire_night";
+
+export interface VillageEventRequirements {
+  fish: number;
+  flower: number;
+  lamp: number;
+}
+
+export interface VillageEvent {
+  id: string;
+  type: VillageEventType;
+  title: string;
+  description: string;
+  createdDay: number;
+  status: "active" | "complete";
+  requirements: VillageEventRequirements;
+}
+
+export interface VillageMindState {
+  relationships: Record<NpcId, number>;
+  memories: Record<NpcId, NpcMemory[]>;
+  villageLog: string[];
+  activeEvent: VillageEvent | null;
+  provider: "luna" | "local";
+}
+
+export interface AiTurn {
+  dialogue: string;
+  emotion: "neutral" | "happy" | "curious" | "worried";
+  memory: string;
+  relationshipDelta: number;
+  action: "remember" | "plan_event" | "share_rumor";
+  eventType: VillageEventType | "none";
+  eventTitle: string;
+  eventDescription: string;
+  requirements: VillageEventRequirements;
+  provider: "luna" | "local";
+}
+
 export type QuestStage =
   | "talk-lulu"
   | "place-flower"
@@ -35,7 +90,7 @@ export type QuestStage =
   | "complete";
 
 export interface PixelSave {
-  version: 2;
+  version: 3;
   day: number;
   phase: TimePhase;
   phaseStartedAt: number;
@@ -44,6 +99,8 @@ export interface PixelSave {
   direction: Direction;
   resources: Resources;
   placements: PlacedItem[];
+  trees: TreeNode[];
+  mind: VillageMindState;
   talkCounts: Record<NpcId, number>;
   fishCaught: number;
   questStage: QuestStage;

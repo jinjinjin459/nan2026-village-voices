@@ -20,6 +20,7 @@ import {
 import {
   LEGACY_PIXEL_SAVE_KEY,
   PIXEL_SAVE_KEY,
+  V2_PIXEL_SAVE_KEY,
   advanceTime,
   canAfford,
   canPlaceAt,
@@ -28,6 +29,7 @@ import {
   loadPixelSave,
   makePlacement,
   movePlayer,
+  nearestHarvestTree,
   nearestNpc,
   refundResources,
   resetToWorld,
@@ -37,6 +39,7 @@ import {
 } from "./pixel/engine";
 import { createNpcRuntime, stepNpcSimulation } from "./pixel/npcSimulation";
 import type { Direction, FishingReward, NpcId, NpcRuntime, PixelSave, Point } from "./pixel/types";
+import { countBuildable, createVillageEvent, isVillageEventReady, requestNpcTurn } from "./pixel/villageMind";
 
 const MOVEMENT_KEYS = new Set(["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"]);
 const ACTION_RADIUS = {
@@ -76,17 +79,19 @@ function App() {
   const [dialogue, setDialogue] = useState<{ npcId: NpcId; line: string; context: string } | null>(null);
   const [fishingOpen, setFishingOpen] = useState(false);
   const [sleeping, setSleeping] = useState(false);
-  const [toast, setToast] = useState("서쪽 부두에서 낚시하고, 중앙 집 문으로 들어갈 수 있어요!");
+  const [toast, setToast] = useState("주민에게 자유롭게 말하고, 가까운 나무는 E키로 벨 수 있어요!");
   const [helpOpen, setHelpOpen] = useState(false);
   const [now, setNow] = useState(Date.now);
   const keys = useRef(new Set<string>());
   const gameRef = useRef(game);
   const npcRef = useRef(npcs);
+  const dialogueRef = useRef(dialogue);
   const lockedRef = useRef(false);
   const viewport = useViewportSize();
 
   gameRef.current = game;
   npcRef.current = npcs;
+  dialogueRef.current = dialogue;
   lockedRef.current = Boolean(dialogue) || fishingOpen || sleeping || helpOpen || buildMode;
 
   const npcPositions = useMemo(() => Object.fromEntries(
@@ -98,16 +103,22 @@ function App() {
     [game.location, game.player, npcPositions],
   );
 
+  const nearbyTree = useMemo(
+    () => game.location === "world" ? nearestHarvestTree(game.player, game.trees) : null,
+    [game.location, game.player, game.trees],
+  );
+
   const nearbyAction = useMemo(() => {
     if (game.location === "home") {
       if (distance(game.player, BED_POINT) < ACTION_RADIUS.sleep) return "sleep" as const;
       if (distance(game.player, HOME_EXIT) < ACTION_RADIUS["exit-home"]) return "exit-home" as const;
       return null;
     }
+    if (nearbyTree) return "chop-tree" as const;
     if (distance(game.player, FISHING_SPOT) < ACTION_RADIUS.fish) return "fish" as const;
     if (distance(game.player, HOUSE_DOOR) < ACTION_RADIUS["enter-home"]) return "enter-home" as const;
     return null;
-  }, [game.location, game.player]);
+  }, [game.location, game.player, nearbyTree]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => savePixelState(game), 180);
@@ -148,7 +159,7 @@ function App() {
       previous = tick;
       const currentGame = gameRef.current;
       if (currentGame.location !== "world") return;
-      setNpcs((current) => stepNpcSimulation(current, currentGame.phase, currentGame.placements, Date.now(), elapsed));
+      setNpcs((current) => stepNpcSimulation(current, currentGame.phase, currentGame.placements, currentGame.trees, Date.now(), elapsed));
     }, 100);
     return () => window.clearInterval(timer);
   }, []);
@@ -184,6 +195,7 @@ function App() {
             { x: (dx / length) * speed, y: (dy / length) * speed },
             current.placements,
             current.location,
+            current.trees,
           ),
           questStage:
             current.questStage === "visit-fishing" && current.location === "world" && current.player.x < 800
@@ -196,6 +208,40 @@ function App() {
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    if (!game.trees.some((tree) => tree.state === "falling")) return;
+    const timer = window.setTimeout(() => {
+      setGame((current) => ({
+        ...current,
+        trees: current.trees.map((tree) => tree.state === "falling" ? { ...tree, state: "stump" } : tree),
+      }));
+    }, 620);
+    return () => window.clearTimeout(timer);
+  }, [game.trees]);
+
+  useEffect(() => {
+    if (!isVillageEventReady(game)) return;
+    const eventTitle = game.mind.activeEvent?.title || "마을 행사";
+    setGame((current) => {
+      if (!isVillageEventReady(current) || !current.mind.activeEvent) return current;
+      return {
+        ...current,
+        resources: { ...current.resources, coins: current.resources.coins + 60 },
+        mind: {
+          ...current.mind,
+          relationships: {
+            lulu: Math.min(100, current.mind.relationships.lulu + 2),
+            moka: Math.min(100, current.mind.relationships.moka + 2),
+            dubu: Math.min(100, current.mind.relationships.dubu + 2),
+          },
+          activeEvent: { ...current.mind.activeEvent, status: "complete" },
+          villageLog: [...current.mind.villageLog, `${eventTitle} 준비를 모두 마쳤다.`].slice(-12),
+        },
+      };
+    });
+    setToast(`${eventTitle} 준비 완료 · 코인 +60`);
+  }, [game.fishCaught, game.mind.activeEvent, game.placements]);
 
   const closeDialogue = useCallback(() => setDialogue(null), []);
 
@@ -222,6 +268,81 @@ function App() {
     }));
   }, []);
 
+  const handleAiSpeak = useCallback(async (message: string) => {
+    const activeDialogue = dialogueRef.current;
+    if (!activeDialogue) return;
+    const npcId = activeDialogue.npcId;
+    const turn = await requestNpcTurn(npcId, message, gameRef.current);
+    const event = createVillageEvent(turn, gameRef.current.day);
+    setGame((current) => {
+      const memories = [...current.mind.memories[npcId], {
+        id: `memory-${npcId}-${Date.now().toString(36)}`,
+        text: turn.memory,
+        day: current.day,
+        source: "player" as const,
+      }].slice(-8);
+      return {
+        ...current,
+        mind: {
+          ...current.mind,
+          provider: turn.provider,
+          relationships: {
+            ...current.mind.relationships,
+            [npcId]: clamp(current.mind.relationships[npcId] + turn.relationshipDelta, 0, 100),
+          },
+          memories: { ...current.mind.memories, [npcId]: memories },
+          villageLog: [...current.mind.villageLog, turn.memory].slice(-12),
+          activeEvent: event || current.mind.activeEvent,
+        },
+      };
+    });
+    setDialogue((current) => current ? {
+      ...current,
+      line: turn.dialogue,
+      context: turn.provider === "luna" ? "Luna low · 마을 기억에 저장됨" : "마을 두뇌 · 기억에 저장됨",
+    } : current);
+    setNpcs((current) => ({
+      ...current,
+      [npcId]: {
+        ...current[npcId],
+        bubble: event ? `${event.title} 준비하자!` : turn.dialogue.slice(0, 46),
+        goal: event ? `${event.title} 계획 중` : current[npcId].goal,
+        chatUntil: Date.now() + 4200,
+      },
+    }));
+    setToast(event ? `${event.title} 계획이 실제 마을 목표로 생겼어요!` : `${NPCS[npcId].name}이(가) 이 말을 기억합니다.`);
+  }, []);
+
+  const chopNearbyTree = useCallback(() => {
+    const current = gameRef.current;
+    const tree = nearestHarvestTree(current.player, current.trees);
+    if (!tree) return false;
+    const isFinalHit = tree.hits >= 2;
+    setGame((state) => ({
+      ...state,
+      trees: state.trees.map((candidate) => candidate.id === tree.id
+        ? isFinalHit
+          ? { ...candidate, state: "falling", hits: 0, choppedDay: state.day }
+          : { ...candidate, hits: candidate.hits + 1 }
+        : candidate),
+      resources: isFinalHit ? { ...state.resources, wood: state.resources.wood + 5 } : state.resources,
+      mind: isFinalHit ? {
+        ...state.mind,
+        villageLog: [...state.mind.villageLog, "마을 나무 한 그루를 베어 목재를 얻었다."].slice(-12),
+      } : state.mind,
+    }));
+    if (isFinalHit) {
+      setToast("나무를 벴어요 · 목재 +5 · 이틀 뒤 다시 자라요");
+      setNpcs((state) => ({
+        ...state,
+        dubu: { ...state.dubu, bubble: "그루터기에서 다시 싹이 날 거야!", chatUntil: Date.now() + 3600 },
+      }));
+    } else {
+      setToast(`도끼질 ${tree.hits + 1}/3 · 두 번 더 힘내요!`.replace("두 번", tree.hits === 1 ? "한 번" : "두 번"));
+    }
+    return true;
+  }, []);
+
   const handlePrimaryAction = useCallback(() => {
     if (lockedRef.current) return;
     const current = gameRef.current;
@@ -237,6 +358,7 @@ function App() {
         openNpcDialogue(npcId);
         return;
       }
+      if (chopNearbyTree()) return;
       if (distance(current.player, FISHING_SPOT) < ACTION_RADIUS.fish) {
         setFishingOpen(true);
         setGame((state) => ({
@@ -260,7 +382,7 @@ function App() {
       setGame(resetToWorld);
       setToast("마을로 나왔어요.");
     }
-  }, [openNpcDialogue]);
+  }, [chopNearbyTree, openNpcDialogue]);
 
   useEffect(() => {
     function keyDown(event: KeyboardEvent) {
@@ -343,7 +465,7 @@ function App() {
       setToast("자원이 부족해요.");
       return;
     }
-    if (!canPlaceAt(point, buildSelection, game.placements)) {
+    if (!canPlaceAt(point, buildSelection, game.placements, game.trees)) {
       setToast("그곳에는 놓을 수 없어요. 빈 잔디밭을 골라주세요.");
       return;
     }
@@ -380,6 +502,7 @@ function App() {
   function resetGame() {
     if (!window.confirm("지금까지 꾸민 마을을 모두 지우고 처음부터 시작할까요?")) return;
     window.localStorage.removeItem(PIXEL_SAVE_KEY);
+    window.localStorage.removeItem(V2_PIXEL_SAVE_KEY);
     window.localStorage.removeItem(LEGACY_PIXEL_SAVE_KEY);
     setGame(createInitialSave());
     setNpcs(createNpcRuntime());
@@ -390,9 +513,19 @@ function App() {
 
   const quest = QUEST_COPY[game.questStage];
   const phaseRemaining = TIME_PHASE_MS - Math.max(0, now - game.phaseStartedAt);
+  const placedLights = useMemo(() => game.placements.filter((item) => item.type === "lamp").map(({ x, y }) => ({ x, y })), [game.placements]);
+  const latestMemory = dialogue ? game.mind.memories[dialogue.npcId].at(-1)?.text : undefined;
+  const activeEvent = game.mind.activeEvent;
+  const eventProgress = activeEvent ? {
+    fish: Math.min(game.fishCaught, activeEvent.requirements.fish),
+    flower: Math.min(countBuildable(game, "flower"), activeEvent.requirements.flower),
+    lamp: Math.min(countBuildable(game, "lamp"), activeEvent.requirements.lamp),
+  } : null;
   const promptLabel = nearbyNpc
     ? `${NPCS[nearbyNpc].name}와 대화하기`
-    : nearbyAction === "fish"
+    : nearbyAction === "chop-tree"
+      ? `나무 베기 ${Math.min(3, (nearbyTree?.hits || 0) + 1)}/3`
+      : nearbyAction === "fish"
       ? "낚시하기"
       : nearbyAction === "enter-home"
         ? "집에 들어가기"
@@ -402,8 +535,10 @@ function App() {
              ? "침대에서 잠들기"
              : null;
   const promptDetail = nearbyNpc
-    ? "E키 또는 버튼을 눌러요"
-    : nearbyAction === "fish"
+    ? "자유롭게 말하면 주민이 기억하고 행동해요"
+    : nearbyAction === "chop-tree"
+      ? "E키를 세 번 눌러 목재를 얻어요"
+      : nearbyAction === "fish"
       ? "던지고, 입질이 오면 E키를 다시 눌러요"
       : nearbyAction === "enter-home"
         ? "문 앞에서 E키를 눌러요"
@@ -422,12 +557,16 @@ function App() {
         direction={game.direction}
         moving={moving}
         npcs={npcs}
+        trees={game.trees}
         nearbyNpc={nearbyNpc}
+        nearbyTreeId={nearbyTree?.id || null}
         buildMode={buildMode}
         night={game.phase === "night"}
         nearbyAction={nearbyAction}
+        placedLights={placedLights}
         onWorldPointer={handleWorldPointer}
         onNpcInteract={openNpcDialogue}
+        onTreeInteract={chopNearbyTree}
         onPrimaryAction={handlePrimaryAction}
       >
         {game.location === "world" ? game.placements.map((item) => (
@@ -463,6 +602,21 @@ function App() {
         <div><strong>{quest.title}</strong><small>{quest.detail}</small></div>
       </aside>
 
+      {activeEvent && eventProgress ? (
+        <aside className={`village-event-panel is-${activeEvent.status}`} data-testid="village-event">
+          <span className="event-symbol" aria-hidden="true">✦</span>
+          <div>
+            <strong>{activeEvent.status === "complete" ? `${activeEvent.title} 준비 완료` : activeEvent.title}</strong>
+            <small>{activeEvent.description}</small>
+            <span className="event-requirements">
+              {activeEvent.requirements.fish > 0 ? <i>물고기 {eventProgress.fish}/{activeEvent.requirements.fish}</i> : null}
+              {activeEvent.requirements.flower > 0 ? <i>들꽃 {eventProgress.flower}/{activeEvent.requirements.flower}</i> : null}
+              {activeEvent.requirements.lamp > 0 ? <i>가로등 {eventProgress.lamp}/{activeEvent.requirements.lamp}</i> : null}
+            </span>
+          </div>
+        </aside>
+      ) : null}
+
       {promptLabel && !dialogue && !buildMode && !fishingOpen ? (
         <button className="interaction-prompt" type="button" onClick={handlePrimaryAction}>
           <kbd>E</kbd><span><strong>{promptLabel}</strong>{promptDetail ? <small>{promptDetail}</small> : null}</span>
@@ -488,7 +642,17 @@ function App() {
 
       {toast ? <div className="game-toast" role="status">{toast}</div> : null}
 
-      {dialogue ? <DialoguePanel npcId={dialogue.npcId} line={dialogue.line} context={dialogue.context} onClose={closeDialogue} /> : null}
+      {dialogue ? (
+        <DialoguePanel
+          npcId={dialogue.npcId}
+          line={dialogue.line}
+          context={dialogue.context}
+          memory={latestMemory}
+          provider={game.mind.provider}
+          onSpeak={handleAiSpeak}
+          onClose={closeDialogue}
+        />
+      ) : null}
       {fishingOpen ? <FishingPanel seed={game.day * 11 + game.fishCaught} onCatch={handleFishCatch} onClose={() => setFishingOpen(false)} /> : null}
       {sleeping ? <div className="sleep-transition" role="status"><span>✦</span><strong>잠드는 중…</strong><small>내일 아침에 만나요</small></div> : null}
 
@@ -497,10 +661,12 @@ function App() {
           <section className="help-card">
             <button className="help-close" type="button" onClick={() => setHelpOpen(false)} aria-label="도움말 닫기">×</button>
             <h2 id="help-title">새로운 마을 생활</h2>
-            <p>다리 너머를 탐험하고, 주민들의 일상을 지켜보고, 집에서 하루를 마무리하세요.</p>
+            <p>주민에게 자유롭게 말하면 기억과 관계가 쌓이고, 실제 마을 행사가 만들어져요.</p>
             <dl>
               <div><dt>이동</dt><dd>WASD · 방향키 · 화면 패드</dd></div>
-              <div><dt>대화·행동</dt><dd>가까이에서 E</dd></div>
+              <div><dt>AI 대화</dt><dd>주민 가까이에서 E → 하고 싶은 말 입력</dd></div>
+              <div><dt>마을 행사</dt><dd>“낚시 축제를 열자”처럼 직접 제안</dd></div>
+              <div><dt>벌목</dt><dd>나무 가까이에서 E를 세 번 눌러 목재 획득</dd></div>
               <div><dt>낚시</dt><dd>서쪽 부두에서 E → 입질 때 다시 E</dd></div>
               <div><dt>집</dt><dd>광장 왼쪽 중앙 집 문 앞에서 E</dd></div>
               <div><dt>수면</dt><dd>집 안 침대 가까이에서 E</dd></div>

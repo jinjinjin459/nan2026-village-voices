@@ -1,6 +1,6 @@
 import { NPCS } from "./data";
 import { canStandAt, distance } from "./engine";
-import type { NpcId, NpcRuntime, PlacedItem, TimePhase } from "./types";
+import type { NpcId, NpcRuntime, PlacedItem, TimePhase, TreeNode } from "./types";
 
 const SOCIAL_LINES: Record<string, [string, string]> = {
   "dubu:lulu": ["루루, 오늘은 어디까지 뛰어갈 거야?", "낚시터까지! 두부도 같이 가자!"],
@@ -37,6 +37,7 @@ export function stepNpcSimulation(
   current: Record<NpcId, NpcRuntime>,
   phase: TimePhase,
   placements: PlacedItem[],
+  trees: TreeNode[],
   now: number,
   elapsedSeconds: number,
 ): Record<NpcId, NpcRuntime> {
@@ -81,7 +82,7 @@ export function stepNpcSimulation(
       ? dx < 0 ? "left" : "right"
       : dy < 0 ? "up" : "down";
 
-    next[id] = canStandAt(candidate, placements, "world")
+    next[id] = canStandAt(candidate, placements, "world", trees)
       ? { ...runtime, ...candidate, direction, activity: "walking", goal: target.label, bubble: null }
       : {
           ...runtime,

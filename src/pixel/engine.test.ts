@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TIME_PHASE_MS, createInitialSave } from "./data";
+import { TIME_PHASE_MS, createInitialSave, createInitialTrees } from "./data";
 import {
   advanceTime,
   canAfford,
@@ -14,17 +14,20 @@ import {
 import { createNpcRuntime, stepNpcSimulation } from "./npcSimulation";
 
 describe("pixel village engine", () => {
-  it("blocks the cottage and water but keeps the central bridge walkable", () => {
-    expect(canStandAt({ x: 1295, y: 260 }, [])).toBe(false);
-    expect(canStandAt({ x: 940, y: 350 }, [])).toBe(false);
-    expect(canStandAt({ x: 1000, y: 650 }, [])).toBe(true);
+  it("only blocks standing trees and the world boundary outdoors", () => {
+    const trees = createInitialTrees();
+    expect(canStandAt({ x: 1295, y: 260 }, [])).toBe(true);
+    expect(canStandAt({ x: 940, y: 350 }, [])).toBe(true);
+    expect(canStandAt(trees[0], [], "world", trees)).toBe(false);
+    expect(canStandAt({ x: 10, y: 650 }, [], "world", trees)).toBe(false);
   });
 
   it("moves on free ground and stops at blocked terrain", () => {
     const moved = movePlayer({ x: 1450, y: 700 }, { x: 20, y: 0 }, []);
     expect(moved.x).toBe(1470);
-    const blocked = movePlayer({ x: 1135, y: 280 }, { x: 30, y: 0 }, []);
-    expect(blocked.x).toBe(1135);
+    const trees = createInitialTrees();
+    const blocked = movePlayer({ x: trees[0].x - 70, y: trees[0].y }, { x: 20, y: 0 }, [], "world", trees);
+    expect(blocked.x).toBe(trees[0].x - 70);
   });
 
   it("keeps a continuous walking route from the village to the fishing dock", () => {
@@ -53,14 +56,17 @@ describe("pixel village engine", () => {
     expect(refundResources(resources, item)).toEqual({ wood: 2, stone: 0, coins: 8 });
   });
 
-  it("allows decoration on open grass but not inside the river", () => {
+  it("allows decoration across the free map but not on a standing tree", () => {
     expect(canPlaceAt({ x: 1510, y: 900 }, "flower", [])).toBe(true);
-    expect(canPlaceAt({ x: 950, y: 850 }, "flower", [])).toBe(false);
+    const trees = createInitialTrees();
+    expect(canPlaceAt(trees[0], "flower", [], trees)).toBe(false);
   });
 
-  it("keeps solid placed objects collidable", () => {
+  it("keeps only placed trees collidable", () => {
     const tree = makePlacement("tree", { x: 1510, y: 900 });
     expect(canStandAt({ x: 1510, y: 910 }, [tree])).toBe(false);
+    const bench = makePlacement("bench", { x: 1510, y: 900 });
+    expect(canStandAt({ x: 1510, y: 910 }, [bench])).toBe(true);
   });
 
   it("switches day and night every five minutes", () => {
@@ -83,7 +89,7 @@ describe("pixel village engine", () => {
 
   it("lets nearby residents stop and talk to each other", () => {
     const residents = createNpcRuntime();
-    const next = stepNpcSimulation(residents, "day", [], 10_000, 0.1);
+    const next = stepNpcSimulation(residents, "day", [], [], 10_000, 0.1);
     expect([next.moka.activity, next.dubu.activity]).toContain("chatting");
     expect(Boolean(next.moka.bubble || next.dubu.bubble)).toBe(true);
   });

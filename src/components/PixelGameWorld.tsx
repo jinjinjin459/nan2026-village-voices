@@ -2,8 +2,8 @@ import { memo, type PointerEvent, type ReactNode } from "react";
 import expandedVillageMap from "../assets/pixel/expanded-village-map.png";
 import houseInterior from "../assets/pixel/house-interior.png";
 import { BED_POINT, FISHING_SPOT, HOME_EXIT, HOUSE_DOOR, NPCS, SCENE_SIZE } from "../pixel/data";
-import type { Direction, LocationId, NpcId, NpcRuntime, Point } from "../pixel/types";
-import { CharacterSprite } from "./PixelSprite";
+import type { Direction, LocationId, NpcId, NpcRuntime, Point, TreeNode } from "../pixel/types";
+import { CharacterSprite, HarvestTreeSprite } from "./PixelSprite";
 
 interface Camera {
   x: number;
@@ -18,17 +18,22 @@ interface Props {
   direction: Direction;
   moving: boolean;
   npcs: Record<NpcId, NpcRuntime>;
+  trees: TreeNode[];
   nearbyNpc: NpcId | null;
+  nearbyTreeId: string | null;
   buildMode: boolean;
   night: boolean;
-  nearbyAction: LandmarkAction | null;
+  nearbyAction: WorldAction | null;
+  placedLights: Point[];
   children: ReactNode;
   onWorldPointer: (point: Point) => void;
   onNpcInteract: (npcId: NpcId) => void;
+  onTreeInteract: () => void;
   onPrimaryAction: () => void;
 }
 
 export type LandmarkAction = "fish" | "enter-home" | "exit-home" | "sleep";
+export type WorldAction = LandmarkAction | "chop-tree";
 
 const WORLD_LANDMARKS = [
   { action: "fish", point: FISHING_SPOT, icon: "♒", label: "낚시터" },
@@ -43,11 +48,13 @@ const HOME_LANDMARKS = [
 const CAUSEWAY_PLANKS = Array.from({ length: 14 }, (_, index) => index);
 
 const WORLD_LIGHTS: Point[] = [
+  { x: 575, y: 215 },
+  { x: 165, y: 405 },
   { x: 885, y: 575 },
   { x: 1245, y: 575 },
   { x: 1490, y: 220 },
   { x: 1705, y: 220 },
-  { x: 1295, y: 340 },
+  { x: 1295, y: 300 },
 ];
 
 export const PixelGameWorld = memo(function PixelGameWorld({
@@ -57,13 +64,17 @@ export const PixelGameWorld = memo(function PixelGameWorld({
   direction,
   moving,
   npcs,
+  trees,
   nearbyNpc,
+  nearbyTreeId,
   buildMode,
   night,
   nearbyAction,
+  placedLights,
   children,
   onWorldPointer,
   onNpcInteract,
+  onTreeInteract,
   onPrimaryAction,
 }: Props) {
   const scene = SCENE_SIZE[location];
@@ -98,6 +109,29 @@ export const PixelGameWorld = memo(function PixelGameWorld({
             {CAUSEWAY_PLANKS.map((plank) => <i key={plank} />)}
           </span>
         ) : null}
+
+        {location === "world" ? trees.map((tree) => {
+          const isNearby = nearbyTreeId === tree.id && tree.state === "standing";
+          return (
+            <button
+              className={`harvest-tree-node is-${tree.state} ${isNearby ? "is-nearby" : ""}`}
+              data-tree={tree.id}
+              data-tree-state={tree.state}
+              key={tree.id}
+              style={{ left: tree.x, top: tree.y, zIndex: Math.round(tree.y) }}
+              type="button"
+              disabled={!isNearby}
+              onClick={(event) => {
+                event.stopPropagation();
+                onTreeInteract();
+              }}
+              aria-label={tree.state === "stump" ? "베어낸 나무 그루터기" : `나무 베기 ${tree.hits + 1}단계`}
+            >
+              {isNearby ? <span className="tree-action-bubble"><kbd>E</kbd> 나무 베기</span> : null}
+              <HarvestTreeSprite tree={tree} />
+            </button>
+          );
+        }) : null}
 
         {(location === "world" ? WORLD_LANDMARKS : HOME_LANDMARKS).map((landmark) => {
           const isNearby = nearbyAction === landmark.action;
@@ -156,15 +190,15 @@ export const PixelGameWorld = memo(function PixelGameWorld({
           <CharacterSprite character="player" moving={moving} facing={direction} />
         </div>
 
+        {night ? <div className="night-tint" aria-hidden="true" /> : null}
         {night ? (
           <div className="night-effects" aria-hidden="true">
-            {(location === "world" ? WORLD_LIGHTS : [{ x: 345, y: 190 }, { x: 600, y: 205 }]).map((light, index) => (
+            {(location === "world" ? [...WORLD_LIGHTS, ...placedLights] : [{ x: 345, y: 190 }, { x: 600, y: 205 }]).map((light, index) => (
               <i key={`${light.x}-${light.y}`} style={{ left: light.x, top: light.y, animationDelay: `${index * -0.4}s` }} />
             ))}
           </div>
         ) : null}
       </div>
-      {night ? <div className="night-tint" aria-hidden="true" /> : null}
       {buildMode ? <div className="build-grid" aria-hidden="true" /> : null}
     </div>
   );

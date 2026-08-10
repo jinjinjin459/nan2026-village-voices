@@ -7,7 +7,9 @@ import {
   WORLD_HEIGHT,
   WORLD_START,
   WORLD_WIDTH,
+  createInitialMind,
   createInitialSave,
+  createInitialTrees,
 } from "./data";
 import type {
   BuildableId,
@@ -18,9 +20,13 @@ import type {
   Point,
   ResourceKey,
   Resources,
+  TreeNode,
+  VillageEvent,
+  VillageMindState,
 } from "./types";
 
-export const PIXEL_SAVE_KEY = "village-voices-pixel-v2";
+export const PIXEL_SAVE_KEY = "village-voices-pixel-v3";
+export const V2_PIXEL_SAVE_KEY = "village-voices-pixel-v2";
 export const LEGACY_PIXEL_SAVE_KEY = "village-voices-pixel-v1";
 
 interface Rect {
@@ -30,21 +36,7 @@ interface Rect {
   height: number;
 }
 
-const WORLD_BLOCKERS: Rect[] = [
-  // Fishing lake. The new wooden causeway at y 555-735 directly connects
-  // the central bridge to the existing western dock.
-  { x: 0, y: 300, width: 805, height: 255 },
-  { x: 0, y: 735, width: 805, height: 230 },
-  // River; the bridge at y 570-735 is the only crossing.
-  { x: 820, y: 0, width: 300, height: 565 },
-  { x: 820, y: 735, width: 300, height: 630 },
-  // Buildings and fixed structures.
-  { x: 60, y: 185, width: 275, height: 270 },
-  { x: 1135, y: 55, width: 340, height: 330 },
-  { x: 1500, y: 150, width: 205, height: 205 },
-  { x: 1770, y: 120, width: 278, height: 545 },
-  { x: 390, y: 135, width: 220, height: 115 },
-  // Outer forest boundary.
+const WORLD_BOUNDARY_BLOCKERS: Rect[] = [
   { x: 0, y: 0, width: WORLD_WIDTH, height: 38 },
   { x: 0, y: WORLD_HEIGHT - 42, width: WORLD_WIDTH, height: 42 },
   { x: 0, y: 0, width: 38, height: WORLD_HEIGHT },
@@ -95,6 +87,67 @@ function parsePlacements(value: unknown): PlacedItem[] {
   ).slice(0, 240);
 }
 
+function parseTrees(value: unknown): TreeNode[] {
+  if (!Array.isArray(value)) return createInitialTrees();
+  const fallbackById = new Map(createInitialTrees().map((tree) => [tree.id, tree]));
+  return value.flatMap((candidate) => {
+    if (!candidate || typeof candidate !== "object") return [];
+    const tree = candidate as Partial<TreeNode>;
+    const fallback = typeof tree.id === "string" ? fallbackById.get(tree.id) : undefined;
+    if (!fallback || !Number.isFinite(tree.x) || !Number.isFinite(tree.y)) return [];
+    return [{
+      ...fallback,
+      x: tree.x!,
+      y: tree.y!,
+      state: tree.state === "stump" || tree.state === "falling" ? tree.state : "standing",
+      hits: clampResource(tree.hits, 0) % 3,
+      choppedDay: typeof tree.choppedDay === "number" ? Math.max(1, Math.trunc(tree.choppedDay)) : null,
+    } satisfies TreeNode];
+  });
+}
+
+function parseVillageEvent(value: unknown): VillageEvent | null {
+  if (!value || typeof value !== "object") return null;
+  const event = value as Partial<VillageEvent>;
+  const types = ["fishing_festival", "garden_party", "campfire_night"];
+  if (typeof event.id !== "string" || !types.includes(event.type || "") || typeof event.title !== "string" || typeof event.description !== "string") return null;
+  return {
+    id: event.id.slice(0, 80),
+    type: event.type!,
+    title: event.title.slice(0, 40),
+    description: event.description.slice(0, 120),
+    createdDay: typeof event.createdDay === "number" ? Math.max(1, Math.trunc(event.createdDay)) : 1,
+    status: event.status === "complete" ? "complete" : "active",
+    requirements: {
+      fish: clampResource(event.requirements?.fish, 0),
+      flower: clampResource(event.requirements?.flower, 0),
+      lamp: clampResource(event.requirements?.lamp, 0),
+    },
+  };
+}
+
+function parseMind(value: unknown): VillageMindState {
+  const fallback = createInitialMind();
+  if (!value || typeof value !== "object") return fallback;
+  const mind = value as Partial<VillageMindState>;
+  const memories = Object.fromEntries((Object.keys(NPCS) as NpcId[]).map((id) => [id,
+    Array.isArray(mind.memories?.[id]) ? mind.memories![id].filter((memory) =>
+      memory && typeof memory.id === "string" && typeof memory.text === "string" && typeof memory.day === "number",
+    ).slice(-8).map((memory) => ({ ...memory, text: memory.text.slice(0, 120) })) : [],
+  ])) as VillageMindState["memories"];
+  return {
+    relationships: {
+      lulu: clampResource(mind.relationships?.lulu, fallback.relationships.lulu),
+      moka: clampResource(mind.relationships?.moka, fallback.relationships.moka),
+      dubu: clampResource(mind.relationships?.dubu, fallback.relationships.dubu),
+    },
+    memories,
+    villageLog: Array.isArray(mind.villageLog) ? mind.villageLog.filter((entry): entry is string => typeof entry === "string").slice(-12).map((entry) => entry.slice(0, 140)) : fallback.villageLog,
+    activeEvent: parseVillageEvent(mind.activeEvent),
+    provider: mind.provider === "luna" ? "luna" : "local",
+  };
+}
+
 function migrateLegacySave(raw: string, now: number): PixelSave {
   const fallback = createInitialSave(now);
   try {
@@ -131,13 +184,14 @@ export function loadPixelSave(now = Date.now()): PixelSave {
   try {
     const saved = window.localStorage.getItem(PIXEL_SAVE_KEY);
     if (!saved) {
-      const legacy = window.localStorage.getItem(LEGACY_PIXEL_SAVE_KEY);
+      const legacy = window.localStorage.getItem(V2_PIXEL_SAVE_KEY) || window.localStorage.getItem(LEGACY_PIXEL_SAVE_KEY);
       return legacy ? migrateLegacySave(legacy, now) : fallback;
     }
     const parsed = JSON.parse(saved) as Partial<PixelSave>;
     const location: LocationId = parsed.location === "home" ? "home" : "world";
     const placements = parsePlacements(parsed.placements);
-    const player = isFinitePoint(parsed.player) && canStandAt(parsed.player, placements, location)
+    const trees = parseTrees(parsed.trees);
+    const player = isFinitePoint(parsed.player) && canStandAt(parsed.player, placements, location, trees)
       ? parsed.player
       : location === "home" ? { x: 600, y: 780 } : fallback.player;
     const questStages = ["talk-lulu", "place-flower", "talk-moka", "visit-fishing", "catch-fish", "complete"];
@@ -159,6 +213,8 @@ export function loadPixelSave(now = Date.now()): PixelSave {
         coins: clampResource(parsed.resources?.coins, fallback.resources.coins),
       },
       placements,
+      trees,
+      mind: parseMind(parsed.mind),
       talkCounts: {
         lulu: clampResource(parsed.talkCounts?.lulu, 0),
         moka: clampResource(parsed.talkCounts?.moka, 0),
@@ -196,12 +252,13 @@ function placementRect(item: PlacedItem): Rect {
   };
 }
 
-export function canStandAt(point: Point, placements: PlacedItem[], location: LocationId = "world"): boolean {
-  const blockers = location === "world" ? WORLD_BLOCKERS : HOME_BLOCKERS;
+export function canStandAt(point: Point, placements: PlacedItem[], location: LocationId = "world", trees: TreeNode[] = []): boolean {
+  const blockers = location === "world" ? WORLD_BOUNDARY_BLOCKERS : HOME_BLOCKERS;
   if (blockers.some((rect) => pointInRect(point, rect))) return false;
   if (location === "home") return true;
+  if (trees.some((tree) => tree.state !== "stump" && distance(point, tree) < 62)) return false;
   return !placements.some(
-    (item) => BUILDABLES[item.type].solid && pointInRect(point, placementRect(item)),
+    (item) => item.type === "tree" && pointInRect(point, placementRect(item)),
   );
 }
 
@@ -210,13 +267,14 @@ export function movePlayer(
   delta: Point,
   placements: PlacedItem[],
   location: LocationId = "world",
+  trees: TreeNode[] = [],
 ): Point {
   const xOnly = { x: current.x + delta.x, y: current.y };
   const yOnly = { x: current.x, y: current.y + delta.y };
   const both = { x: current.x + delta.x, y: current.y + delta.y };
-  if (canStandAt(both, placements, location)) return both;
-  if (canStandAt(xOnly, placements, location)) return xOnly;
-  if (canStandAt(yOnly, placements, location)) return yOnly;
+  if (canStandAt(both, placements, location, trees)) return both;
+  if (canStandAt(xOnly, placements, location, trees)) return xOnly;
+  if (canStandAt(yOnly, placements, location, trees)) return yOnly;
   return current;
 }
 
@@ -261,6 +319,9 @@ export function advanceTime(state: PixelSave, now: number): PixelSave {
     day,
     phase,
     phaseStartedAt: state.phaseStartedAt + transitions * TIME_PHASE_MS,
+    trees: state.trees.map((tree) => tree.choppedDay !== null && day - tree.choppedDay >= 2
+      ? { ...tree, state: "standing", hits: 0, choppedDay: null }
+      : tree.state === "falling" ? { ...tree, state: "stump" } : tree),
   };
 }
 
@@ -301,12 +362,27 @@ export function refundResources(resources: Resources, item: PlacedItem): Resourc
   };
 }
 
-export function canPlaceAt(point: Point, buildableId: BuildableId, placements: PlacedItem[]): boolean {
+export function canPlaceAt(point: Point, buildableId: BuildableId, placements: PlacedItem[], trees: TreeNode[] = []): boolean {
   const definition = BUILDABLES[buildableId];
   const margin = Math.max(definition.width, definition.height) * 0.42;
   if (point.x < margin || point.x > WORLD_WIDTH - margin || point.y < margin || point.y > WORLD_HEIGHT - margin) return false;
-  if (WORLD_BLOCKERS.some((rect) => pointInRect(point, rect, margin * 0.45))) return false;
+  if (WORLD_BOUNDARY_BLOCKERS.some((rect) => pointInRect(point, rect, margin * 0.45))) return false;
+  if (trees.some((tree) => tree.state !== "stump" && distance(point, tree) < margin + 54)) return false;
   return placements.every((item) => distance(point, item) > margin + 24);
+}
+
+export function nearestHarvestTree(point: Point, trees: TreeNode[], maximumDistance = 145): TreeNode | null {
+  let nearest: TreeNode | null = null;
+  let nearestDistance = maximumDistance;
+  for (const tree of trees) {
+    if (tree.state !== "standing") continue;
+    const nextDistance = distance(point, tree);
+    if (nextDistance < nearestDistance) {
+      nearest = tree;
+      nearestDistance = nextDistance;
+    }
+  }
+  return nearest;
 }
 
 export function makePlacement(type: BuildableId, point: Point): PlacedItem {

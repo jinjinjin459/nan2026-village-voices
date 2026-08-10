@@ -8,6 +8,8 @@ import type {
   PixelSave,
   Point,
   QuestStage,
+  TreeNode,
+  VillageMindState,
 } from "./types";
 
 export const WORLD_WIDTH = 2048;
@@ -22,6 +24,32 @@ export const HOUSE_DOOR: Point = { x: 1295, y: 405 };
 export const HOME_EXIT: Point = { x: 600, y: 815 };
 export const BED_POINT: Point = { x: 305, y: 300 };
 export const FISHING_SPOT: Point = { x: 205, y: 665 };
+
+const HARVEST_TREE_POSITIONS: Array<Point & { id: string }> = [
+  { id: "oak-meadow", x: 1450, y: 910 },
+  { id: "oak-orchard", x: 1660, y: 920 },
+  { id: "oak-east", x: 1850, y: 800 },
+  { id: "oak-south-east", x: 1780, y: 1110 },
+  { id: "oak-river", x: 1210, y: 1010 },
+  { id: "oak-south", x: 980, y: 1110 },
+  { id: "oak-west-path", x: 720, y: 1040 },
+  { id: "oak-west", x: 500, y: 1140 },
+  { id: "oak-lakeside", x: 360, y: 1010 },
+];
+
+export function createInitialTrees(): TreeNode[] {
+  return HARVEST_TREE_POSITIONS.map((tree) => ({ ...tree, state: "standing", hits: 0, choppedDay: null }));
+}
+
+export function createInitialMind(): VillageMindState {
+  return {
+    relationships: { lulu: 20, moka: 10, dubu: 25 },
+    memories: { lulu: [], moka: [], dubu: [] },
+    villageLog: ["새로운 주민이 마을에 도착했다."],
+    activeEvent: null,
+    provider: "local",
+  };
+}
 
 export const SCENE_SIZE: Record<LocationId, { width: number; height: number }> = {
   world: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
@@ -142,7 +170,7 @@ export const FISH_REWARDS: Record<FishingReward, { name: string; coins: number; 
 
 export function createInitialSave(now = Date.now()): PixelSave {
   return {
-    version: 2,
+    version: 3,
     day: 1,
     phase: "day",
     phaseStartedAt: now,
@@ -151,6 +179,8 @@ export function createInitialSave(now = Date.now()): PixelSave {
     direction: "down",
     resources: { wood: 20, stone: 12, coins: 150 },
     placements: [],
+    trees: createInitialTrees(),
+    mind: createInitialMind(),
     talkCounts: { lulu: 0, moka: 0, dubu: 0 },
     fishCaught: 0,
     questStage: "talk-lulu",

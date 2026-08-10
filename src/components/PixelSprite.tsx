@@ -2,8 +2,9 @@ import { memo } from "react";
 import characterAtlas from "../assets/pixel/characters.png";
 import buildableAtlas from "../assets/pixel/buildables-v2.png";
 import fishingAtlas from "../assets/pixel/fishing.png";
+import harvestTreeAtlas from "../assets/pixel/harvest-tree-v2.png";
 import { BUILDABLES, FISH_REWARDS } from "../pixel/data";
-import type { BuildableId, FishingReward, NpcId } from "../pixel/types";
+import type { BuildableId, FishingReward, NpcId, TreeNode } from "../pixel/types";
 
 type CharacterId = "player" | NpcId;
 
@@ -76,6 +77,23 @@ export const FishingSprite = memo(function FishingSprite({
         backgroundImage: `url(${fishingAtlas})`,
         backgroundPosition: `${x} ${y}`,
       }}
+      aria-hidden="true"
+    />
+  );
+});
+
+export const HarvestTreeSprite = memo(function HarvestTreeSprite({ tree }: { tree: TreeNode }) {
+  const frame = tree.state === "stump"
+    ? { column: 1, row: 1 }
+    : tree.state === "falling"
+      ? { column: 0, row: 1 }
+      : { column: Math.min(2, tree.hits), row: 0 };
+  const x = frame.column === 0 ? "0%" : frame.column === 1 ? "50%" : "100%";
+  const y = frame.row === 0 ? "0%" : "100%";
+  return (
+    <span
+      className={`harvest-tree-sprite tree-state-${tree.state} tree-hits-${tree.hits}`}
+      style={{ backgroundImage: `url(${harvestTreeAtlas})`, backgroundPosition: `${x} ${y}` }}
       aria-hidden="true"
     />
   );
