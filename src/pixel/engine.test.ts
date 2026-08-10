@@ -27,6 +27,20 @@ describe("pixel village engine", () => {
     expect(blocked.x).toBe(1135);
   });
 
+  it("keeps a continuous walking route from the village to the fishing dock", () => {
+    let player = { x: 1450, y: 650 };
+    let guard = 0;
+    while (player.x > 205 && guard < 500) {
+      const next = movePlayer(player, { x: -Math.min(8, player.x - 205), y: 0 }, []);
+      expect(next).not.toEqual(player);
+      player = next;
+      guard += 1;
+    }
+
+    expect(guard).toBeLessThan(500);
+    expect(Math.hypot(player.x - 205, player.y - 650)).toBeLessThan(2);
+  });
+
   it("spends the exact build cost", () => {
     const state = createInitialSave();
     expect(canAfford(state.resources, "bench")).toBe(true);

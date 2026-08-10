@@ -65,16 +65,15 @@ async function runDesktop() {
   await page.mouse.click(worldBox.x + (1510 / 2048) * worldBox.width, worldBox.y + (940 / 1365) * worldBox.height);
   await page.locator('[data-placement="flower"]').waitFor({ state: "visible" });
 
-  await updateSave(page, { player: { x: 1250, y: 650 }, location: "world", questStage: "visit-fishing" });
+  await updateSave(page, { player: { x: 1450, y: 650 }, location: "world", questStage: "visit-fishing" });
   await page.reload({ waitUntil: "networkidle" });
   await page.keyboard.down("ArrowLeft");
-  await page.waitForTimeout(2_100);
+  await page.waitForTimeout(5_050);
   await page.keyboard.up("ArrowLeft");
-  const crossedX = Number.parseFloat((await player.getAttribute("style")).match(/left:\s*([\d.]+)px/)?.[1] || "9999");
-  assert.ok(crossedX < 850, "플레이어가 중앙 다리를 걸어서 낚시 구역으로 건너갈 수 있어야 합니다.");
+  const dockX = Number.parseFloat((await player.getAttribute("style")).match(/left:\s*([\d.]+)px/)?.[1] || "9999");
+  const dockY = Number.parseFloat((await player.getAttribute("style")).match(/top:\s*([\d.]+)px/)?.[1] || "9999");
+  assert.ok(dockX < 250 && dockY > 610 && dockY < 700, "시작 지점에서 새 목재 보행로를 따라 서쪽 부두 끝에 도착해야 합니다.");
 
-  await updateSave(page, { player: { x: 205, y: 665 }, location: "world", questStage: "catch-fish" });
-  await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(2_900);
   const fishingLandmark = page.locator('[data-landmark="fish"]');
   assert.ok(await fishingLandmark.isVisible(), "낚시 포인트 표지판이 보여야 합니다.");
@@ -163,7 +162,7 @@ try {
     fishing: fishingShot,
     home: homeShot,
     mobile: mobileShot,
-    flow: "resident social -> move/build -> fish -> enter home -> sleep -> next morning",
+    flow: "start -> walk across causeway -> fish -> enter home -> sleep -> next morning",
   }));
 } finally {
   await browser.close();

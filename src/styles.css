@@ -168,6 +168,47 @@ button.world-character.is-nearby {
   animation: landmark-ready .65s steps(2, end) infinite;
 }
 
+.fishing-causeway {
+  position: absolute;
+  left: 330px;
+  top: 596px;
+  z-index: 18;
+  display: grid;
+  width: 690px;
+  height: 106px;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 5px;
+  padding: 8px 5px;
+  border-top: 8px solid #51331f;
+  border-bottom: 8px solid #51331f;
+  background: #6e4525;
+  box-shadow: 0 7px 0 rgba(26, 48, 30, .35), inset 0 4px 0 #d0924d, inset 0 -4px 0 #7a4a27;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.fishing-causeway::before,
+.fishing-causeway::after {
+  content: "";
+  position: absolute;
+  top: -18px;
+  bottom: -18px;
+  width: 9px;
+  border: 3px solid #3e291c;
+  background: #85552c;
+  box-shadow: inset 2px 0 #c08345;
+}
+
+.fishing-causeway::before { left: 8px; }
+.fishing-causeway::after { right: 8px; }
+
+.fishing-causeway i {
+  border: 3px solid #5b371e;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #b97938 0 72%, #9b5d2d 72%);
+  box-shadow: inset 3px 0 #d69a50, inset -2px 0 #744421;
+}
+
 @keyframes landmark-ready {
   50% { transform: translate(-50%, -155%); }
 }

@@ -31,9 +31,9 @@ interface Rect {
 }
 
 const WORLD_BLOCKERS: Rect[] = [
-  // Fishing lake. The horizontal dock at y 570-720 remains walkable.
+  // Fishing lake. The new wooden causeway at y 555-735 directly connects
+  // the central bridge to the existing western dock.
   { x: 0, y: 300, width: 805, height: 255 },
-  { x: 420, y: 555, width: 385, height: 180 },
   { x: 0, y: 735, width: 805, height: 230 },
   // River; the bridge at y 570-735 is the only crossing.
   { x: 820, y: 0, width: 300, height: 565 },

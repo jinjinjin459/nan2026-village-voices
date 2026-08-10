@@ -40,6 +40,8 @@ const HOME_LANDMARKS = [
   { action: "exit-home", point: HOME_EXIT, icon: "↡", label: "마을로" },
 ] satisfies Array<{ action: LandmarkAction; point: Point; icon: string; label: string }>;
 
+const CAUSEWAY_PLANKS = Array.from({ length: 14 }, (_, index) => index);
+
 const WORLD_LIGHTS: Point[] = [
   { x: 885, y: 575 },
   { x: 1245, y: 575 },
@@ -90,6 +92,12 @@ export const PixelGameWorld = memo(function PixelGameWorld({
         }}
       >
         {children}
+
+        {location === "world" ? (
+          <span className="fishing-causeway" aria-hidden="true">
+            {CAUSEWAY_PLANKS.map((plank) => <i key={plank} />)}
+          </span>
+        ) : null}
 
         {(location === "world" ? WORLD_LANDMARKS : HOME_LANDMARKS).map((landmark) => {
           const isNearby = nearbyAction === landmark.action;
