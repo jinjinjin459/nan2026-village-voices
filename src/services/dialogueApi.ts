@@ -15,6 +15,8 @@ const topics: Topic[] = [
 const apiBase = (import.meta.env.VITE_API_BASE_URL || ".").replace(/\/$/, "");
 const hasRemoteApi = Boolean(import.meta.env.VITE_API_BASE_URL);
 const shouldCallApi = hasRemoteApi || !window.location.hostname.endsWith("github.io");
+let aiAvailability: boolean | null = shouldCallApi ? null : false;
+let healthRequest: Promise<boolean> | null = null;
 
 function isDialogueResult(value: unknown): value is Omit<DialogueResult, "source"> {
   if (!value || typeof value !== "object") return false;
@@ -22,7 +24,7 @@ function isDialogueResult(value: unknown): value is Omit<DialogueResult, "source
   return (
     typeof result.dialogue === "string" &&
     result.dialogue.length >= 2 &&
-    result.dialogue.length <= 180 &&
+    result.dialogue.length <= 120 &&
     emotions.includes(result.emotion as Emotion) &&
     topics.includes(result.topic as Topic)
   );
@@ -30,7 +32,8 @@ function isDialogueResult(value: unknown): value is Omit<DialogueResult, "source
 
 export async function requestDialogue(payload: DialoguePayload): Promise<DialogueResult> {
   const fallback = getFallbackDialogue(payload.state, payload.residentId);
-  if (!shouldCallApi) {
+  const aiReady = aiAvailability ?? await getAiHealth();
+  if (!aiReady) {
     await new Promise((resolve) => window.setTimeout(resolve, 260));
     return fallback;
   }
@@ -55,13 +58,22 @@ export async function requestDialogue(payload: DialoguePayload): Promise<Dialogu
 }
 
 export async function getAiHealth(): Promise<boolean> {
-  if (!shouldCallApi) return false;
+  if (aiAvailability !== null) return aiAvailability;
+  if (healthRequest) return healthRequest;
+  healthRequest = (async () => {
+    try {
+      const response = await fetch(`${apiBase}/api/health`, { signal: AbortSignal.timeout(1800) });
+      if (!response.ok) return false;
+      const body = (await response.json()) as { ai?: boolean };
+      return body.ai === true;
+    } catch {
+      return false;
+    }
+  })();
   try {
-    const response = await fetch(`${apiBase}/api/health`, { signal: AbortSignal.timeout(1800) });
-    if (!response.ok) return false;
-    const body = (await response.json()) as { ai?: boolean };
-    return body.ai === true;
-  } catch {
-    return false;
+    aiAvailability = await healthRequest;
+    return aiAvailability;
+  } finally {
+    healthRequest = null;
   }
 }

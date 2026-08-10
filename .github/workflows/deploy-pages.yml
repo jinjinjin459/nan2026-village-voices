@@ -39,6 +39,8 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_API_BASE_URL: https://nan2026-village-voices-api.wlsalswo14.workers.dev
 
       - name: Verify submission
         run: npm run verify

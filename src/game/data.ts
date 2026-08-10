@@ -6,6 +6,7 @@ import type {
   ResidentId,
   ResidentProfile,
   VillageState,
+  VillageStateSnapshot,
 } from "./types";
 
 export const RESIDENTS: Record<ResidentId, ResidentProfile> = {
@@ -74,8 +75,27 @@ export const FACILITIES: Record<FacilityId, FacilityDefinition> = {
   },
 };
 
-export function createInitialState(): VillageState {
+const residentIds: ResidentId[] = ["lulu", "moka", "dubu"];
+const facilityIds: FacilityId[] = ["park", "arcade", "shop"];
+const relationshipKeys: Array<keyof VillageState["relationships"]> = [
+  "lulu:moka",
+  "lulu:dubu",
+  "moka:dubu",
+];
+
+const clampInteger = (value: unknown, fallback: number, minimum: number, maximum: number) => {
+  const numeric = typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.max(minimum, Math.min(maximum, Math.trunc(numeric)));
+};
+
+const clampScore = (value: unknown, fallback: number) => clampInteger(value, fallback, 0, 100);
+
+const isFacilityId = (value: unknown): value is FacilityId =>
+  typeof value === "string" && facilityIds.includes(value as FacilityId);
+
+function baseVillageState(): VillageState {
   return {
+    day: 1,
     phase: "before",
     facilities: { cafe: true, park: false, arcade: false, shop: false },
     happiness: { lulu: 50, moka: 45, dubu: 60 },
@@ -87,6 +107,83 @@ export function createInitialState(): VillageState {
     talkedBefore: { lulu: false, moka: false, dubu: false },
     talkedAfter: { lulu: false, moka: false, dubu: false },
     selectedFacility: null,
+    lastBuiltFacility: null,
+    talkCounts: { lulu: 0, moka: 0, dubu: 0 },
+  };
+}
+
+export function createInitialState(snapshot: VillageStateSnapshot | null = null): VillageState {
+  const base = baseVillageState();
+  if (!snapshot || typeof snapshot !== "object") return base;
+
+  const selectedFacility = isFacilityId(snapshot.selectedFacility) ? snapshot.selectedFacility : null;
+  const lastBuiltFacility = isFacilityId(snapshot.lastBuiltFacility)
+    ? snapshot.lastBuiltFacility
+    : selectedFacility;
+
+  const facilities: VillageState["facilities"] = {
+    cafe: typeof snapshot.facilities?.cafe === "boolean" ? snapshot.facilities.cafe : base.facilities.cafe,
+    park: typeof snapshot.facilities?.park === "boolean" ? snapshot.facilities.park : base.facilities.park,
+    arcade:
+      typeof snapshot.facilities?.arcade === "boolean"
+        ? snapshot.facilities.arcade
+        : base.facilities.arcade,
+    shop: typeof snapshot.facilities?.shop === "boolean" ? snapshot.facilities.shop : base.facilities.shop,
+  };
+  if (selectedFacility) facilities[selectedFacility] = true;
+  if (lastBuiltFacility) facilities[lastBuiltFacility] = true;
+
+  const talkedBefore = { ...base.talkedBefore };
+  const talkedAfter = { ...base.talkedAfter };
+  const happiness = { ...base.happiness };
+  const talkCounts = { ...base.talkCounts };
+
+  for (const residentId of residentIds) {
+    talkedBefore[residentId] =
+      typeof snapshot.talkedBefore?.[residentId] === "boolean"
+        ? snapshot.talkedBefore[residentId]
+        : base.talkedBefore[residentId];
+    talkedAfter[residentId] =
+      typeof snapshot.talkedAfter?.[residentId] === "boolean"
+        ? snapshot.talkedAfter[residentId]
+        : base.talkedAfter[residentId];
+    happiness[residentId] = clampScore(snapshot.happiness?.[residentId], base.happiness[residentId]);
+    const inferredTalkCount = Number(talkedBefore[residentId] || talkedAfter[residentId]);
+    talkCounts[residentId] = clampInteger(
+      snapshot.talkCounts?.[residentId],
+      inferredTalkCount,
+      0,
+      Number.MAX_SAFE_INTEGER,
+    );
+  }
+
+  const relationships = { ...base.relationships };
+  for (const relationshipKey of relationshipKeys) {
+    relationships[relationshipKey] = clampScore(
+      snapshot.relationships?.[relationshipKey],
+      base.relationships[relationshipKey],
+    );
+  }
+
+  const recentEvents = Array.isArray(snapshot.recentEvents)
+    ? snapshot.recentEvents.filter(
+        (event): event is string => typeof event === "string" && event.trim().length > 0,
+      ).slice(0, 12)
+    : base.recentEvents;
+  const phase = snapshot.phase === "after" && selectedFacility ? "after" : "before";
+
+  return {
+    day: clampInteger(snapshot.day, base.day, 1, Number.MAX_SAFE_INTEGER),
+    phase,
+    facilities,
+    happiness,
+    relationships,
+    recentEvents,
+    talkedBefore,
+    talkedAfter,
+    selectedFacility: phase === "after" ? selectedFacility : null,
+    lastBuiltFacility,
+    talkCounts,
   };
 }
 
@@ -211,7 +308,11 @@ const afterDialogue: Record<FacilityId, Record<ResidentId, DialogueResult>> = {
 };
 
 export function getFallbackDialogue(state: VillageState, residentId: ResidentId): DialogueResult {
-  if (state.phase === "before" || !state.selectedFacility) return beforeDialogue[residentId];
+  if (state.phase === "before" || !state.selectedFacility) {
+    const latest = state.lastBuiltFacility;
+    if (latest && state.day > 1) return afterDialogue[latest][residentId];
+    return beforeDialogue[residentId];
+  }
   return afterDialogue[state.selectedFacility][residentId];
 }
 

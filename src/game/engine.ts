@@ -1,4 +1,5 @@
 import type { FacilityId, ResidentId, VillageState } from "./types";
+import { createInitialState } from "./data";
 
 const outcomeByFacility = {
   park: {
@@ -31,32 +32,57 @@ const outcomeByFacility = {
   events: string[];
 }>;
 
-const clamp = (value: number) => Math.max(0, Math.min(100, value));
+const MAX_RECENT_EVENTS = 12;
+
+const clampScore = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+const clampCount = (value: number) =>
+  Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.trunc(value)));
 
 export function markTalked(state: VillageState, residentId: ResidentId): VillageState {
-  const key = state.phase === "before" ? "talkedBefore" : "talkedAfter";
-  return { ...state, [key]: { ...state[key], [residentId]: true } };
+  const current = createInitialState(state);
+  const key = current.phase === "before" ? "talkedBefore" : "talkedAfter";
+  return {
+    ...current,
+    [key]: { ...current[key], [residentId]: true },
+    talkCounts: {
+      ...current.talkCounts,
+      [residentId]: clampCount(current.talkCounts[residentId] + 1),
+    },
+    happiness: {
+      ...current.happiness,
+      [residentId]: clampScore(current.happiness[residentId] + 1),
+    },
+  };
 }
 
 export function applyFacility(state: VillageState, facilityId: FacilityId): VillageState {
-  if (state.phase !== "before" || state.selectedFacility) return state;
+  if (!canDevelop(state) || state.facilities[facilityId]) return state;
+  const current = createInitialState(state);
   const outcome = outcomeByFacility[facilityId];
   return {
-    ...state,
+    ...current,
     phase: "after",
     selectedFacility: facilityId,
-    facilities: { ...state.facilities, [facilityId]: true },
+    lastBuiltFacility: facilityId,
+    facilities: { ...current.facilities, [facilityId]: true },
     happiness: {
-      lulu: clamp(state.happiness.lulu + outcome.happiness.lulu),
-      moka: clamp(state.happiness.moka + outcome.happiness.moka),
-      dubu: clamp(state.happiness.dubu + outcome.happiness.dubu),
+      lulu: clampScore(current.happiness.lulu + outcome.happiness.lulu),
+      moka: clampScore(current.happiness.moka + outcome.happiness.moka),
+      dubu: clampScore(current.happiness.dubu + outcome.happiness.dubu),
     },
     relationships: {
-      "lulu:moka": clamp(state.relationships["lulu:moka"] + outcome.relationships["lulu:moka"]),
-      "lulu:dubu": clamp(state.relationships["lulu:dubu"] + outcome.relationships["lulu:dubu"]),
-      "moka:dubu": clamp(state.relationships["moka:dubu"] + outcome.relationships["moka:dubu"]),
+      "lulu:moka": clampScore(
+        current.relationships["lulu:moka"] + outcome.relationships["lulu:moka"],
+      ),
+      "lulu:dubu": clampScore(
+        current.relationships["lulu:dubu"] + outcome.relationships["lulu:dubu"],
+      ),
+      "moka:dubu": clampScore(
+        current.relationships["moka:dubu"] + outcome.relationships["moka:dubu"],
+      ),
     },
-    recentEvents: [...outcome.events],
+    talkedAfter: { lulu: false, moka: false, dubu: false },
+    recentEvents: [...outcome.events, ...current.recentEvents].slice(0, MAX_RECENT_EVENTS),
   };
 }
 
@@ -66,9 +92,33 @@ export function countTalked(state: VillageState): number {
 }
 
 export function canDevelop(state: VillageState): boolean {
-  return state.phase === "before" && countTalked(state) >= 2;
+  return (
+    state.phase === "before" &&
+    (["park", "arcade", "shop"] as FacilityId[]).some((id) => !state.facilities[id])
+  );
 }
 
 export function canSeeResult(state: VillageState): boolean {
-  return state.phase === "after" && countTalked(state) >= 2;
+  return state.phase === "after";
+}
+
+export function startNextDay(state: VillageState): VillageState {
+  const allFacilitiesBuilt = (["park", "arcade", "shop"] as FacilityId[]).every(
+    (id) => state.facilities[id],
+  );
+  if (state.phase !== "after" && !allFacilitiesBuilt) return state;
+  const current = createInitialState(state);
+  const nextDay = Math.max(1, clampCount(current.day + 1));
+  return {
+    ...current,
+    day: nextDay,
+    phase: "before",
+    selectedFacility: null,
+    talkedBefore: { lulu: false, moka: false, dubu: false },
+    talkedAfter: { lulu: false, moka: false, dubu: false },
+    recentEvents: [`${nextDay}일 차 아침이 밝았다.`, ...current.recentEvents].slice(
+      0,
+      MAX_RECENT_EVENTS,
+    ),
+  };
 }
