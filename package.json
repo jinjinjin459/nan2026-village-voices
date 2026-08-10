@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "node scripts/sandbox-e2e.mjs",
     "test:mobile": "node scripts/mobile-smoke.mjs",
+    "capture:submission": "node scripts/capture-submission.mjs",
     "record:highlight": "node scripts/record-highlight.mjs",
     "check": "npm run test && npm run build",
     "verify": "node scripts/verify-submission.mjs"

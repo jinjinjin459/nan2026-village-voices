@@ -14,7 +14,7 @@
     .page>* { position:relative; z-index:1; }
     header { display:flex; justify-content:space-between; align-items:center; padding-bottom:6mm; border-bottom:.35mm solid #d7d2c6; color:#356650; font-size:8.5pt; font-weight:900; letter-spacing:.14em; }
     .brand { display:flex; align-items:center; gap:3mm; }.mark { display:grid; place-items:center; width:10mm; height:10mm; border-radius:55% 45%; color:white; background:#356650; transform:rotate(-6deg); }
-    main { min-height:222mm; display:flex; flex-direction:column; justify-content:center; }
+    main { min-height:208mm; display:flex; flex-direction:column; justify-content:center; }
     .kicker { display:flex; align-items:center; gap:2mm; margin-bottom:5mm; color:#db7266; font-size:8.5pt; font-weight:900; letter-spacing:.16em; }.kicker::before { content:""; width:8mm; height:.7mm; border-radius:2mm; background:#db7266; }
     h1 { margin:0 0 7mm; font-family:"Noto Serif KR","Malgun Gothic",serif; font-size:31pt; line-height:1.25; letter-spacing:-.055em; }
     .lead { margin:0 0 10mm; color:#55594f; font-size:12pt; line-height:1.75; word-break:keep-all; }
@@ -26,7 +26,7 @@
     .notice b { display:block; margin-bottom:2mm; font-size:12pt; }
     .scope { margin-top:4mm; display:grid; grid-template-columns:repeat(4,1fr); gap:3mm; }
     .scope div { padding:2mm 1.5mm; border:.28mm solid #d7d2c6; border-radius:4mm; text-align:center; background:white; }.scope b { display:block; color:#356650; font-size:9pt; }.scope span { color:#77756c; font-size:7.5pt; line-height:1.35; }
-    footer { position:absolute; left:20mm; right:20mm; bottom:5mm; display:flex; justify-content:space-between; padding-top:3mm; border-top:.25mm solid #d7d2c6; color:#858177; font-size:8pt; }
+    .page footer { position:absolute; left:20mm; right:20mm; bottom:5mm; display:flex; justify-content:space-between; padding-top:3mm; border-top:.25mm solid #d7d2c6; color:#858177; font-size:8pt; }
     a { color:#356650; text-decoration:none; }
     @media print { body { background:white; }.page { margin:0; } }
   </style>
@@ -41,12 +41,12 @@
       <dl class="info">
         <dt>프로젝트명</dt><dd><b>마을의 목소리 (Village Voices)</b></dd>
         <dt>참가 형태</dt><dd><b>개인 참여</b></dd>
-        <dt>담당 범위</dt><dd>게임 기획, 프로그래밍, AI 구조 및 프롬프트 설계, UI·코드 기반 아트, 테스트, 제출 문서</dd>
+        <dt>담당 범위</dt><dd>게임 기획, 자유 진행 시스템·프로그래밍, Workers AI 구조 및 프롬프트 설계, UI, 생성 배경 검수·통합, 테스트, 제출 문서</dd>
         <dt>플레이 링크</dt><dd><a href="https://jinjinjin459.github.io/nan2026-village-voices/">https://jinjinjin459.github.io/nan2026-village-voices/</a></dd>
         <dt>소스 코드</dt><dd><a href="https://github.com/jinjinjin459/nan2026-village-voices">https://github.com/jinjinjin459/nan2026-village-voices</a></dd>
       </dl>
       <div class="notice"><b>팀원 롤 기술서 생략 사유</b>NAN 2026 제출 안내에 따라 팀원별 이름·담당 역할·협업 방식을 작성하는 “팀원 롤 기술서”는 2인 이상 팀에만 해당하며, 개인 참여의 경우 생략 가능합니다. 본 프로젝트는 개인 참여이므로 별도의 팀원 간 역할 분담 내역이 없습니다.</div>
-      <div class="scope"><div><b>기획</b><span>핵심 루프·상태·시설 효과</span></div><div><b>개발</b><span>React·TypeScript·Node.js</span></div><div><b>AI 활용</b><span>Context·Prompt·검증</span></div><div><b>디자인·QA</b><span>코드 기반 UI·자동 테스트</span></div></div>
+      <div class="scope"><div><b>기획</b><span>자유 루프·누적 상태</span></div><div><b>개발</b><span>React·TypeScript·Worker</span></div><div><b>AI 활용</b><span>Context·Prompt·검증</span></div><div><b>디자인·QA</b><span>생성 배경 검수·E2E</span></div></div>
     </main>
     <footer><span>마을의 목소리 · 개인 참가 확인서</span><span>프로토타입 v1.0</span></footer>
   </section>

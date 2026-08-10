@@ -35,6 +35,10 @@ const startedAt = Date.now();
 
 async function waitForDialogue() {
   await page.locator(".dialogue-bubble:not(.is-loading)").waitFor({ state: "visible", timeout: 16_000 });
+  const source = page.locator(".source-badge").last();
+  if ((await source.innerText()).trim() !== "AI") {
+    throw new Error("Final highlight recording requires a live Gemma AI response, not fallback dialogue.");
+  }
   await wait(3_400);
 }
 
