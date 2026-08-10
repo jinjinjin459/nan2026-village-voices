@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AnimalAvatar } from "./components/AnimalAvatar";
 import { GameIcon } from "./components/GameIcon";
+import { PlayerAvatar } from "./components/PlayerAvatar";
 import { BEFORE_CLUES, FACILITIES, RESIDENTS, RESULT_COPY, createInitialState, getFallbackDialogue } from "./game/data";
 import { applyFacility, canDevelop, canSeeResult, countTalked, markTalked, startNextDay } from "./game/engine";
 import type { DialogueResult, FacilityId, ResidentId, VillageState, VillageStateSnapshot } from "./game/types";
@@ -388,7 +389,7 @@ function App() {
           <div className="village-ground">
             {facilityOrder.filter((id) => village.facilities[id]).map((id) => <FacilityScene key={id} facilityId={id} />)}
             <div className="player-character" data-testid="player" data-player="true" style={{ left: `${player.x}%`, top: `${player.y}%` }} aria-label="플레이어">
-              <span className="player-shadow" /><span className="player-body"><i className="player-hair" /><i className="player-face">•ᴗ•</i><i className="player-shirt">♧</i></span>
+              <PlayerAvatar />
             </div>
             {residentOrder.map((id) => {
               const profile = RESIDENTS[id];

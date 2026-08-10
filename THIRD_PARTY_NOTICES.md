@@ -4,20 +4,26 @@
 
 ## Visual assets
 
-### AI-generated original background
+### AI-generated original 3D visual assets
 
 | 파일 | 생성·검수 내역 | 출처 |
 | --- | --- | --- |
 | `src/assets/village-diorama-v2.png` | 2026-08-10 OpenAI image generation을 사용해 본 프로젝트 전용 3D 디오라마 마을 배경으로 생성. 참가자가 화면 구성, 플레이 영역의 여백, 캐릭터·UI 가독성, 독창성을 직접 검수한 뒤 크롭·배치 및 앱 통합 | [OpenAI image generation](https://openai.com/index/image-generation/) |
+| `src/assets/residents/lulu-3d.webp` | 루루의 성격·의상·실루엣을 정의해 프로젝트 전용 토끼 주민 3D 렌더로 생성. 참가자가 배경 제거, edge 검수, WebP 최적화, 맵·대화 UI 통합 | [OpenAI image generation](https://openai.com/index/image-generation/) |
+| `src/assets/residents/moka-3d.webp` | 모카의 성격·의상·실루엣을 정의해 프로젝트 전용 고양이 주민 3D 렌더로 생성. 참가자가 배경 제거, edge 검수, WebP 최적화, 맵·대화 UI 통합 | [OpenAI image generation](https://openai.com/index/image-generation/) |
+| `src/assets/residents/dubu-3d.webp` | 두부의 성격·의상·실루엣을 정의해 프로젝트 전용 강아지 주민 3D 렌더로 생성. 참가자가 배경 제거, edge 검수, WebP 최적화, 맵·대화 UI 통합 | [OpenAI image generation](https://openai.com/index/image-generation/) |
+| `src/assets/residents/player-3d.webp` | 프로젝트 전용 방문자 플레이어 3D 렌더로 생성. 참가자가 배경 제거, edge 검수, WebP 최적화, 이동 레이어 통합 | [OpenAI image generation](https://openai.com/index/image-generation/) |
 
 - 해상도: 1672 × 941 PNG
 - SHA-256: `38A515A7D5C7E95C17AFF1A17AE69C2CB9C9395E7CD8B571249DE22C22B9F0D7`
-- 외부 게임·캐릭터·브랜드 에셋을 포함하지 않는 프로젝트용 오리지널 배경으로 제작했습니다.
-- 생성 결과를 그대로 자동 제출하지 않았으며, 참가자가 실제 UI에서 반복 검수하고 코드 기반 시설·NPC·플레이어 레이어와 조합했습니다.
+- 3D 캐릭터 WebP 해상도: 루루 1024 × 1536, 모카 1103 × 1426, 두부 1122 × 1402, 플레이어 1024 × 1536
+- 3D 캐릭터 SHA-256: 루루 `C245334E69FCB25A85EE977E18DEB9634B417B18693C43AAFABBC3FFF0C150D8`, 모카 `14510860250FD10EF68A62F70F911016801E62EDFCA007B263748D9B766D6327`, 두부 `3974E1BB2824544C39D3522C6B941F824437EEB0825F07C3D0CF6466065660F7`, 플레이어 `10D7F01C3E7D9B1D86D1477D5D6A514DAEA365717043794C390BA829FCE35675`
+- 외부 게임·캐릭터·브랜드 에셋을 포함하지 않는 프로젝트용 오리지널 시각 에셋으로 제작했습니다.
+- 생성 결과를 그대로 자동 제출하지 않았으며, 참가자가 실제 UI에서 반복 검수하고 코드 기반 시설·표정 cue·인터랙션 레이어와 조합했습니다.
 
 ### Code-native graphics
 
-주민 캐릭터, 플레이어, 시설, 아이콘, 말풍선과 인터랙션 UI는 프로젝트 내부 React 컴포넌트, CSS, 인라인 SVG로 제작했습니다. 별도의 외부 캐릭터·아이콘 팩·음악·효과음을 사용하지 않았습니다.
+시설, 아이콘, 말풍선, 캐릭터 그림자·호흡 애니메이션·감정 cue와 인터랙션 UI는 프로젝트 내부 React 컴포넌트, CSS, 인라인 SVG로 제작했습니다. 별도의 외부 캐릭터·아이콘 팩·음악·효과음을 사용하지 않았습니다.
 
 ## Runtime and build dependencies
 
@@ -37,7 +43,7 @@
 | --- | --- | --- |
 | Google Gemma 4 26B A4B Instruct (`@cf/google/gemma-4-26b-a4b-it`) | Cloudflare Workers AI binding으로 날짜·시설·관계·행복·사건을 반영한 공개 런타임 NPC 대사, 감정, 주제의 구조화 생성 | https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/ |
 | OpenAI Codex | 기획 검토, 구현 보조, 회귀 테스트, 문서 작성과 UI 검증. 모든 결과는 참가자가 직접 선택·수정·실행·검수 | https://developers.openai.com/codex/ |
-| OpenAI image generation | 프로젝트 전용 3D 디오라마 배경 생성. 생성일 2026-08-10, 인간 검수 및 통합 | https://openai.com/index/image-generation/ |
+| OpenAI image generation | 프로젝트 전용 3D 디오라마 배경과 주민 3명·플레이어 캐릭터 렌더 생성. 생성일 2026-08-10, 인간 검수·배경 제거·최적화·통합 | https://openai.com/index/image-generation/ |
 | Cloudflare Workers / Workers AI | GitHub Pages의 대화 요청을 검증하고 AI binding으로 모델을 실행하는 edge runtime | https://developers.cloudflare.com/workers-ai/ |
 | GitHub Pages | 정적 웹 빌드 및 소스 공개 | https://docs.github.com/pages |
 

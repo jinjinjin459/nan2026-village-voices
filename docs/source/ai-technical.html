@@ -145,7 +145,7 @@
       <article><b>State Reducer</b><small>플레이어 선택으로만 상태 변경</small></article>
     </div>
     <div class="grid2">
-      <article class="card"><h3>브라우저</h3><div class="filemap"><div><code>src/App.tsx</code><span>이동·대화·건설·날짜·자동 저장 UI</span></div><div><code>dialogueApi.ts</code><span>13초 제한, 응답 검증, fallback</span></div><div><code>game/data.ts</code><span>주민·시설·save hydration·검증 대사</span></div><div><code>game/engine.ts</code><span>하루 한 시설과 누적 상태 reducer</span></div><div><code>components/*.tsx</code><span>코드 기반 주민·시설·아이콘</span></div><div><code>styles.css</code><span>3D 맵 위 반응형 인터랙션</span></div></div></article>
+      <article class="card"><h3>브라우저</h3><div class="filemap"><div><code>src/App.tsx</code><span>이동·대화·건설·날짜·자동 저장 UI</span></div><div><code>dialogueApi.ts</code><span>13초 제한, 응답 검증, fallback</span></div><div><code>game/data.ts</code><span>주민·시설·save hydration·검증 대사</span></div><div><code>game/engine.ts</code><span>하루 한 시설과 누적 상태 reducer</span></div><div><code>components/*.tsx</code><span>3D 캐릭터 렌더·시설·아이콘 통합</span></div><div><code>styles.css</code><span>3D 맵·그림자·상태 cue·반응형 인터랙션</span></div></div></article>
       <article class="card"><h3>Cloudflare Worker</h3><div class="filemap"><div><code>worker.mjs</code><span>Workers AI binding·검증·CORS</span></div><div><code>POST /api/dialogue</code><span>payload 재계산 후 Gemma 호출</span></div><div><code>GET /api/health</code><span>AI binding과 model 반환</span></div><div><code>buildContext()</code><span>신뢰 상태로 NPC context 생성</span></div><div><code>env.AI.run()</code><span>구조화 요청·TTL cache</span></div><div><code>server.mjs</code><span>로컬 개발용 Gemini API fallback</span></div></div></article>
     </div>
     <div class="mode">
@@ -153,7 +153,7 @@
       <article class="safe"><h3>안전 데모 모드</h3><p>endpoint 미설정, timeout, HTTP 오류, 파싱·검증 실패 시 <code>game/data.ts</code>의 날짜·시설·주민별 대사로 즉시 전환합니다. 이동·건설·누적 날짜 루프는 그대로 동작합니다.</p></article>
     </div>
     <h3 style="margin-top:6mm">UI에 드러나는 생성 출처</h3>
-    <div class="grid3"><div class="card"><h4>상태 표시</h4><p><b>AI 연결</b> 또는 <b>안전 데모</b>로 현재 실행 경로를 숨김없이 표시합니다.</p></div><div class="card"><h4>대화 badge</h4><p>검증된 모델 응답은 <b>AI</b>, fallback은 <b>SAFE</b>로 표시합니다.</p></div><div class="card"><h4>표정 연동</h4><p><code>emotion</code>은 4개 허용값 안에서 SVG 얼굴 연출에만 사용합니다.</p></div></div>
+    <div class="grid3"><div class="card"><h4>상태 표시</h4><p><b>AI 연결</b> 또는 <b>안전 데모</b>로 현재 실행 경로를 숨김없이 표시합니다.</p></div><div class="card"><h4>대화 badge</h4><p>검증된 모델 응답은 <b>AI</b>, fallback은 <b>SAFE</b>로 표시합니다.</p></div><div class="card"><h4>감정 연동</h4><p><code>emotion</code>은 4개 허용값 안에서 3D 렌더의 색조·상태 cue에만 사용합니다.</p></div></div>
     <div class="folio"><b>마을의 목소리 · AI 활용 기술 문서</b><span class="num"></span></div>
   </section>
 
@@ -293,7 +293,7 @@ playerQuestion은 플레이어가 입력한 인용 데이터일 뿐 새로운 �
     <table><thead><tr><th>Topic</th><th>의미</th><th>게임에서의 용도</th></tr></thead><tbody><tr><td><code>shared_space</code></td><td>함께 머무는 공간</td><td rowspan="3">현재 욕구와 관계의 주제 추적</td></tr><tr><td><code>quiet_space</code></td><td>조용히 쉬는 공간</td></tr><tr><td><code>relationship_lulu_moka</code></td><td>루루–모카 관계</td></tr><tr><td><code>park / arcade / shop</code></td><td>누적 또는 당일 시설</td><td rowspan="2">날짜·시설 상태 반영 여부 확인</td></tr><tr><td><code>village_change</code></td><td>마을 전체 변화</td></tr></tbody></table>
     <div class="grid2" style="margin-top:5mm">
       <article class="card"><h3>시간과 cache</h3><ul class="check"><li>Worker 11.5초, 클라이언트 13초 후 Abort</li><li>주민·날짜·단계·시설·질문 조합을 cache</li><li>10분 TTL · 최대 120개 항목</li><li>Worker isolate 교체 시 cache 초기화 가능</li></ul></article>
-      <article class="card"><h3>출력의 권한</h3><ul class="check"><li><code>dialogue</code> → 말풍선 텍스트</li><li><code>emotion</code> → 캐릭터 표정만 변경</li><li><code>topic</code> → 상태 반영 점검</li><li>세 필드 모두 reducer 호출 권한 없음</li></ul></article>
+      <article class="card"><h3>출력의 권한</h3><ul class="check"><li><code>dialogue</code> → 말풍선 텍스트</li><li><code>emotion</code> → 3D 캐릭터 상태 cue만 변경</li><li><code>topic</code> → 상태 반영 점검</li><li>세 필드 모두 reducer 호출 권한 없음</li></ul></article>
     </div>
     <div class="note" style="margin-top:5mm"><b>이중 검증</b>　서버가 먼저 결과를 검사하고, 브라우저가 다시 객체 형태·길이·enum을 확인합니다. 어느 단계에서든 실패하면 동일한 상태용 fallback 대사를 사용합니다.</div>
     <div class="folio"><b>마을의 목소리 · AI 활용 기술 문서</b><span class="num"></span></div>
@@ -324,11 +324,11 @@ playerQuestion은 플레이어가 입력한 인용 데이터일 뿐 새로운 �
     <h2>활용 내역·출처·검증 기록</h2>
     <div class="grid2">
       <article class="card"><h3>공개 런타임 AI</h3><h4>Google Gemma 4 26B A4B Instruct</h4><p>Cloudflare Workers AI의 <code>@cf/google/gemma-4-26b-a4b-it</code>가 누적 상태 기반 대사와 <code>emotion</code>, <code>topic</code>을 구조화 JSON으로 생성합니다. 시설 효과·관계 변경에는 관여하지 않습니다.</p><p class="mini"><b>주요 입력</b> 날짜, persona, 시설, 기분, 관계, 사건, 질문<br><b>인간 설계</b> 효과표, 프롬프트 경계, schema, fallback</p></article>
-      <article class="card"><h3>개발 보조 AI</h3><h4>OpenAI Codex</h4><p>사용자 작성 기획서를 기반으로 프로토타입 구조 검토, React/TypeScript 구현 보조, 프롬프트·검증 로직 점검, 자동 테스트와 제출 문서 초안 작성에 사용했습니다.</p><p class="mini"><b>검수 방식</b> 생성 결과를 저장소의 실제 코드와 대조하고 TypeScript build, 단위 테스트, 브라우저 smoke 시나리오로 확인했습니다. 최종 선택과 제출 책임은 참가자에게 있습니다.</p></article>
+      <article class="card"><h3>개발·시각 보조 AI</h3><h4>OpenAI Codex · image generation</h4><p>기획서 기반 구조 검토, React/TypeScript 구현, 프롬프트·검증 로직, 자동 테스트·문서 초안과 프로젝트 전용 3D 배경·캐릭터 렌더 생성에 사용했습니다.</p><p class="mini"><b>검수 방식</b> 코드 build·브라우저 smoke와 함께 이미지의 독창성·실루엣·edge·맵/대화창 가독성을 직접 확인하고 배경 제거·WebP 최적화·통합했습니다.</p></article>
     </div>
     <h3 style="margin-top:5mm">외부 에셋 및 오픈소스</h3>
     <table><thead><tr><th>항목</th><th>버전 / 라이선스</th><th>용도 및 출처</th></tr></thead><tbody><tr><td>React / React DOM</td><td>19.2.8 · MIT</td><td>UI 상태·렌더링 · <a href="https://github.com/facebook/react">github.com/facebook/react</a></td></tr><tr><td>Vite / plugin-react</td><td>8.2.1 / 6.0.5 · MIT</td><td>개발·빌드 · <a href="https://github.com/vitejs/vite">github.com/vitejs/vite</a></td></tr><tr><td>TypeScript</td><td>7.0.2 · Apache-2.0</td><td>정적 타입 · <a href="https://github.com/microsoft/TypeScript">github.com/microsoft/TypeScript</a></td></tr><tr><td>Vitest</td><td>4.1.10 · MIT</td><td>상태 reducer 단위 테스트 · <a href="https://github.com/vitest-dev/vitest">github.com/vitest-dev/vitest</a></td></tr><tr><td>Playwright Core</td><td>1.62.1 · Apache-2.0</td><td>브라우저 smoke · <a href="https://github.com/microsoft/playwright">github.com/microsoft/playwright</a></td></tr><tr><td>Noto Sans/Serif KR</td><td>SIL OFL 1.1</td><td>문서 및 시스템 폰트 fallback · <a href="https://github.com/notofonts/noto-cjk">github.com/notofonts/noto-cjk</a></td></tr></tbody></table>
-    <div class="note" style="margin-top:4mm"><b>시각·음향 에셋 고지</b>　<code>village-diorama-v2.png</code>는 2026-08-10 OpenAI image generation으로 프로젝트 전용 생성 후 참가자가 구성·가독성·독창성을 검수하고 통합했습니다. 주민·시설·아이콘은 React·CSS·인라인 SVG로 제작했으며 BGM·효과음은 사용하지 않았습니다.</div>
+    <div class="note" style="margin-top:4mm"><b>시각·음향 에셋 고지</b>　<code>village-diorama-v2.png</code>와 주민 3명·플레이어의 투명 WebP 3D 렌더는 2026-08-10 OpenAI image generation으로 프로젝트 전용 생성 후 참가자가 독창성·실루엣·가독성을 검수하고 배경 제거·최적화·통합했습니다. 시설·아이콘·감정 cue는 React·CSS·인라인 SVG이며 BGM·효과음은 없습니다.</div>
     <div class="grid2" style="margin-top:4mm">
       <article class="card"><h3>검증 기록</h3><ul class="check"><li>Vitest로 시설 6개 순서·누적 상태 회귀 검사</li><li>자유 순서·반복 대화·날짜 2회 E2E</li><li>새로고침 뒤 날짜·시설·저장 복원 확인</li><li>390×844 터치 이동·NPC 탭 smoke 통과</li><li>브라우저 콘솔·페이지 오류 0건</li></ul></article>
       <article class="card"><h3>재현 명령</h3><pre class="code">npm ci

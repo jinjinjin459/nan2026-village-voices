@@ -2,7 +2,7 @@
 
 > **주민의 말을 들으며 관계를 이해하고, 하루씩 나만의 마을을 가꾸는 AI 생활 시뮬레이션.**
 
-NAN 2026 Game × AI Hackathon 사전 과제 프로토타입입니다. 플레이어는 3D 디오라마 마을을 자유롭게 산책하고, 원하는 주민에게 원하는 순서로 몇 번이든 말을 겁니다. 하루에 시설 하나를 지으면 시설·행복도·관계·최근 사건이 누적되고, 다음 날 주민들은 달라진 세계를 각자의 성격으로 이야기합니다.
+NAN 2026 Game × AI Hackathon 사전 과제 프로토타입입니다. 플레이어는 오리지널 3D 배경과 3D 렌더 캐릭터로 구성한 디오라마 마을을 자유롭게 산책하고, 원하는 주민에게 원하는 순서로 몇 번이든 말을 겁니다. 하루에 시설 하나를 지으면 시설·행복도·관계·최근 사건이 누적되고, 다음 날 주민들은 달라진 세계를 각자의 성격으로 이야기합니다.
 
 게임 코드가 세계의 사실과 결과를 결정하고, 공개 웹에서는 **Cloudflare Workers AI**의 **Google Gemma 4 26B A4B Instruct** (`@cf/google/gemma-4-26b-a4b-it`)가 그 상태를 주민별 관점의 짧은 대화로 번역합니다. AI를 사용할 수 없는 환경에서도 동일한 상태를 반영한 검증 대사로 중단 없이 진행됩니다.
 
@@ -172,7 +172,8 @@ AI가 담당하는 것은 `dialogue`, `emotion`, `topic`의 표현뿐입니다. 
 src/
   assets/
     village-diorama-v2.png  3D 디오라마 마을 배경
-  components/               코드 기반 캐릭터·아이콘
+    residents/*.webp        루루·모카·두부·플레이어 3D 렌더
+  components/               3D 캐릭터 통합·아이콘
   game/
     data.ts                 주민·시설·save hydration·fallback
     engine.ts               누적 상태와 날짜 reducer
@@ -212,8 +213,8 @@ npm run verify
 - **공개 런타임 AI:** Cloudflare Workers AI의 [Google Gemma 4 26B A4B Instruct](https://developers.cloudflare.com/workers-ai/models/gemma-4-26b-a4b-it/) (`@cf/google/gemma-4-26b-a4b-it`) — 누적 World State 기반 NPC 대사·감정·주제 생성.
 - **로컬 개발 fallback:** `server.mjs`는 서버 환경 변수로 제공한 Gemini API key가 있을 때만 별도 개발 경로를 사용할 수 있습니다. 이 키는 공개 Worker와 브라우저에 포함하지 않습니다.
 - **개발 보조 AI:** OpenAI Codex — 기획 검토, 코드 작성 보조, 테스트·문서·UI 검증. 모든 결과는 참가자가 직접 실행하고 검수했습니다.
-- **3D 마을 배경:** 2026-08-10 OpenAI image generation으로 이 프로젝트 전용 오리지널 에셋을 생성한 뒤, 참가자가 화면 적합성·가독성·독창성을 검수하고 UI에 통합했습니다.
-- **코드 기반 그래픽:** 주민 캐릭터, 플레이어, 시설, 아이콘은 React·CSS·인라인 SVG로 제작했습니다.
+- **3D 오리지널 비주얼:** 2026-08-10 OpenAI image generation으로 프로젝트 전용 마을 배경과 루루·모카·두부·플레이어 렌더를 생성했습니다. 참가자가 캐릭터 설정, 의상, 카메라·조명, 화면 적합성, 가독성, 독창성을 검수하고 배경 제거·WebP 최적화·UI 통합을 수행했습니다.
+- **코드 기반 그래픽:** 시설, 아이콘, 말풍선, 표정 상태 cue와 인터랙션 UI는 React·CSS·인라인 SVG로 제작했습니다.
 - **사운드:** 사용하지 않았습니다.
 - **폰트:** 운영체제 기본 `Noto Sans KR`/`맑은 고딕` fallback만 사용하며 웹 폰트 파일을 배포하지 않습니다.
 
