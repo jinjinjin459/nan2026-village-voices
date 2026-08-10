@@ -13,6 +13,8 @@ const topics: Topic[] = [
 ];
 
 const apiBase = (import.meta.env.VITE_API_BASE_URL || ".").replace(/\/$/, "");
+const hasRemoteApi = Boolean(import.meta.env.VITE_API_BASE_URL);
+const shouldCallApi = hasRemoteApi || !window.location.hostname.endsWith("github.io");
 
 function isDialogueResult(value: unknown): value is Omit<DialogueResult, "source"> {
   if (!value || typeof value !== "object") return false;
@@ -28,6 +30,10 @@ function isDialogueResult(value: unknown): value is Omit<DialogueResult, "source
 
 export async function requestDialogue(payload: DialoguePayload): Promise<DialogueResult> {
   const fallback = getFallbackDialogue(payload.state, payload.residentId);
+  if (!shouldCallApi) {
+    await new Promise((resolve) => window.setTimeout(resolve, 260));
+    return fallback;
+  }
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 13_000);
   try {
@@ -49,6 +55,7 @@ export async function requestDialogue(payload: DialoguePayload): Promise<Dialogu
 }
 
 export async function getAiHealth(): Promise<boolean> {
+  if (!shouldCallApi) return false;
   try {
     const response = await fetch(`${apiBase}/api/health`, { signal: AbortSignal.timeout(1800) });
     if (!response.ok) return false;
