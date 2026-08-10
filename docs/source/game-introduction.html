@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="NAN 2026 사전 과제 — 마을의 목소리 게임 소개 및 설명 문서" />
+  <title>마을의 목소리 — 게임 소개 및 설명</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    :root { --ink:#38372f; --muted:#716e62; --paper:#fffdf7; --cream:#f6efdf; --green:#356650; --green2:#6d9b77; --mint:#dcebdd; --coral:#df746a; --gold:#d89b42; --line:#d9d2c2; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:#d8d5ce; color:var(--ink); font-family:"Noto Sans KR","Malgun Gothic",sans-serif; font-synthesis:none; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    body { counter-reset: page; }
+    .page { width:210mm; height:297mm; margin:8mm auto; padding:17mm 17mm 15mm; position:relative; overflow:hidden; background:var(--paper); page-break-after:always; counter-increment:page; }
+    .page:last-child { page-break-after:auto; }
+    .page::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.27; background-image:radial-gradient(rgba(53,102,80,.12) .55px,transparent .7px); background-size:6px 6px; }
+    .page > * { position:relative; z-index:1; }
+    .folio { position:absolute; left:17mm; right:17mm; bottom:7mm; display:flex; justify-content:space-between; align-items:center; padding-top:3mm; border-top:.25mm solid var(--line); color:#8d887a; font-size:8pt; letter-spacing:.02em; }
+    .folio b { color:var(--green); font-weight:800; }
+    .folio .num::after { content:counter(page, decimal-leading-zero); }
+    h1,h2,h3,p { margin-top:0; }
+    h1,h2,h3 { font-family:"Noto Serif KR","Malgun Gothic",serif; word-break:keep-all; }
+    h2 { margin-bottom:4mm; font-size:25pt; line-height:1.25; letter-spacing:-.045em; }
+    h3 { margin-bottom:2mm; font-size:13.5pt; line-height:1.4; letter-spacing:-.025em; }
+    p,li,td,th { font-size:9.25pt; line-height:1.65; word-break:keep-all; }
+    .kicker { display:inline-flex; align-items:center; gap:2mm; color:var(--coral); font-size:8.5pt; font-weight:900; letter-spacing:.16em; text-transform:uppercase; }
+    .kicker::before { content:""; width:7mm; height:.65mm; border-radius:2mm; background:var(--coral); }
+    .lead { color:#575449; font-size:12pt; line-height:1.65; letter-spacing:-.02em; }
+    .muted { color:var(--muted); }
+    .tag { display:inline-block; margin:.8mm; padding:1.5mm 3mm; border-radius:99mm; color:var(--green); background:var(--mint); font-size:8.2pt; font-weight:800; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:5mm; }
+    .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; }
+    .card { padding:5mm; border:.3mm solid var(--line); border-radius:5mm; background:rgba(255,255,255,.76); box-shadow:0 2mm 6mm rgba(68,60,43,.06); }
+    .card p:last-child,.card ul:last-child { margin-bottom:0; }
+    .number { display:grid; place-items:center; width:9mm; height:9mm; margin-bottom:3mm; border-radius:50%; color:white; background:var(--green); font-family:Georgia,serif; font-size:12pt; font-weight:800; }
+    .quote { margin:0; padding:4mm 5mm; border-left:1.1mm solid var(--coral); border-radius:0 4mm 4mm 0; color:#4b493f; background:#fff7ed; font-family:"Noto Serif KR","Malgun Gothic",serif; font-size:11pt; line-height:1.75; }
+    .note { padding:3.5mm 4mm; border-radius:3mm; background:var(--mint); color:#315544; font-size:8.8pt; line-height:1.6; }
+    .button { display:inline-flex; align-items:center; gap:2mm; padding:3mm 5mm; border-radius:99mm; color:white; background:var(--green); font-size:9pt; font-weight:850; text-decoration:none; }
+    .linkbox { display:block; padding:4mm 5mm; border:.3mm solid #c9d9cb; border-radius:4mm; color:var(--green); background:#f2f8f1; text-decoration:none; }
+    .linkbox b { display:block; margin-bottom:1mm; color:#2d5944; font-size:9pt; }
+    .linkbox span { font-family:Consolas,"Malgun Gothic",monospace; font-size:7.7pt; word-break:break-all; }
+    .check { margin:0; padding:0; list-style:none; }
+    .check li { position:relative; padding-left:6mm; margin:1.7mm 0; }
+    .check li::before { content:"✓"; position:absolute; left:0; top:0; color:var(--green); font-weight:900; }
+    table { width:100%; border-collapse:collapse; }
+    th { color:white; background:var(--green); font-size:8.5pt; text-align:left; }
+    th,td { padding:2.6mm 3mm; border:.25mm solid var(--line); vertical-align:top; }
+    td { background:rgba(255,255,255,.7); }
+    .cover { padding:0; background:#f5efdf; }
+    .cover::before { opacity:.34; background-image:radial-gradient(rgba(53,102,80,.12) .7px,transparent .8px); background-size:7px 7px; }
+    .cover-inner { height:100%; padding:18mm 18mm 14mm; display:flex; flex-direction:column; }
+    .cover-top { display:flex; justify-content:space-between; align-items:center; color:var(--green); font-size:8.5pt; font-weight:900; letter-spacing:.14em; }
+    .brand { display:flex; align-items:center; gap:3mm; }
+    .brand-mark { display:grid; place-items:center; width:10mm; height:10mm; border-radius:55% 45% 55% 45%; color:white; background:var(--green); transform:rotate(-6deg); }
+    .cover-title { margin:17mm 0 6mm; font-size:39pt; line-height:1.14; letter-spacing:-.065em; }
+    .cover-title em { display:block; color:var(--green); font-style:normal; }
+    .cover-sub { width:130mm; color:#5f5b50; font-size:13.5pt; line-height:1.65; font-weight:600; letter-spacing:-.03em; }
+    .hero { flex:1; display:flex; align-items:flex-end; margin:7mm 0 8mm; }
+    .hero svg { width:100%; height:100mm; filter:drop-shadow(0 4mm 4mm rgba(61,73,52,.12)); }
+    .cover-bottom { display:flex; align-items:flex-end; justify-content:space-between; gap:8mm; }
+    .cover-loop { display:flex; align-items:center; gap:2mm; color:var(--green); font-size:8.5pt; font-weight:900; }
+    .cover-loop span { padding:2mm 3mm; border-radius:99mm; background:white; border:.25mm solid #d6ddcf; }
+    .cover-meta { text-align:right; color:#80796d; font-size:8pt; line-height:1.7; }
+    .contrast { display:grid; grid-template-columns:1fr 12mm 1fr; gap:3mm; align-items:center; margin:7mm 0; }
+    .contrast .arrow { display:grid; place-items:center; width:11mm; height:11mm; border-radius:50%; color:white; background:var(--coral); font-size:15pt; }
+    .contrast .old { background:#f3f0e9; }
+    .contrast .new { border-color:#a7c3ac; background:#eef7ee; }
+    .loop { display:grid; grid-template-columns:repeat(5,1fr); gap:3mm; margin:7mm 0 8mm; }
+    .loop article { position:relative; min-height:38mm; padding:5mm 3.5mm 3.5mm; text-align:center; border-radius:5mm; background:white; border:.3mm solid var(--line); }
+    .loop article:not(:last-child)::after { content:"→"; position:absolute; right:-4.7mm; top:15mm; z-index:2; color:var(--coral); font-weight:900; }
+    .loop b { display:block; margin-bottom:2mm; color:var(--green); font-family:"Noto Serif KR",serif; font-size:12pt; }
+    .loop small { color:var(--muted); font-size:7.7pt; line-height:1.5; }
+    .resident { position:relative; padding-top:16mm; }
+    .resident::before { content:attr(data-animal); position:absolute; top:2mm; left:5mm; display:grid; place-items:center; width:13mm; height:13mm; border-radius:50%; background:var(--resident-soft); font-size:18pt; }
+    .resident h3 { margin-bottom:1mm; }
+    .resident small { color:var(--coral); font-weight:850; }
+    .world { margin-top:6mm; display:grid; grid-template-columns:1.1fr .9fr; gap:5mm; }
+    .state-list { display:grid; grid-template-columns:repeat(2,1fr); gap:2.5mm; }
+    .state-list div { padding:3mm; border-radius:3mm; background:#f7f3e9; }
+    .state-list b { display:block; color:var(--green); font-size:8.5pt; }
+    .state-list span { font-size:8pt; color:var(--muted); }
+    .steps { display:grid; grid-template-columns:1fr 1fr; gap:3mm 5mm; counter-reset:step; }
+    .steps article { position:relative; min-height:27mm; padding:4mm 4mm 3mm 14mm; border-bottom:.3mm solid var(--line); counter-increment:step; }
+    .steps article::before { content:counter(step); position:absolute; left:0; top:4mm; display:grid; place-items:center; width:10mm; height:10mm; border-radius:50%; color:white; background:var(--green); font-weight:900; }
+    .steps b { display:block; margin-bottom:1mm; font-size:10pt; }
+    .steps p { margin:0; color:var(--muted); font-size:8.4pt; }
+    .facility { border-top:1.4mm solid var(--accent); }
+    .facility .icon { display:grid; place-items:center; width:12mm; height:12mm; margin-bottom:3mm; border-radius:4mm; color:white; background:var(--accent); font-size:17pt; }
+    .timeline { display:grid; grid-template-columns:1fr 19mm 1fr; gap:4mm; align-items:stretch; margin:7mm 0; }
+    .timeline .decision { align-self:center; display:grid; place-items:center; height:30mm; border-radius:50%; color:white; background:var(--green); text-align:center; font-size:8pt; font-weight:900; }
+    .scene { padding:6mm; border-radius:5mm; border:.3mm solid var(--line); background:white; }
+    .scene .label { display:inline-block; margin-bottom:3mm; padding:1.2mm 2.5mm; border-radius:99mm; color:white; background:var(--coral); font-size:7.5pt; font-weight:900; letter-spacing:.1em; }
+    .scene.after .label { background:var(--green); }
+    .result-row { display:grid; grid-template-columns:34mm 1fr; gap:4mm; align-items:center; margin:3mm 0; padding:3mm; border-radius:3mm; background:#f7f3ea; }
+    .result-row b { color:var(--green); }
+    .command { padding:3mm 4mm; border-radius:3mm; color:#e8f5eb; background:#26372e; font-family:Consolas,monospace; font-size:8pt; line-height:1.75; white-space:pre-line; }
+    .scope { display:grid; grid-template-columns:1fr 1fr; gap:3mm; }
+    .scope div { padding:4mm; border-radius:4mm; }
+    .scope .in { color:#284c3c; background:#e3f0e4; }
+    .scope .out { color:#71675c; background:#f0ece5; }
+    @media print { body { background:white; } .page { margin:0; } a { color:inherit; } }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div class="cover-inner">
+      <div class="cover-top">
+        <div class="brand"><span class="brand-mark">♧</span><span>VILLAGE VOICES</span></div>
+        <span>NAN 2026 · GAME × AI</span>
+      </div>
+      <h1 class="cover-title">마을의<br><em>목소리</em></h1>
+      <p class="cover-sub">상태창 없이 주민의 말만 듣고 문제를 진단하는 AI 마을 운영 게임</p>
+      <div><span class="tag">생활 시뮬레이션</span><span class="tag">대화 추론</span><span class="tag">3분 프로토타입</span></div>
+      <div class="hero">
+        <svg viewBox="0 0 760 360" role="img" aria-label="루루, 두부, 모카가 있는 작은 마을 일러스트">
+          <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#bcded3"/><stop offset="1" stop-color="#eaf1d8"/></linearGradient></defs>
+          <rect x="8" y="8" width="744" height="344" rx="42" fill="url(#sky)" stroke="#fff" stroke-width="10"/>
+          <path d="M10 228 Q150 112 310 227 Q485 105 750 224 V350 H10Z" fill="#83b58c"/>
+          <path d="M10 268 Q190 178 370 273 Q575 169 750 253 V350 H10Z" fill="#6e9d75"/>
+          <path d="M325 350 Q345 225 420 192 Q495 225 512 350" fill="#eedfbf" opacity=".9"/>
+          <g transform="translate(540 115)"><path d="M0 72h130v105H0z" fill="#fff2da" stroke="#735e47" stroke-width="4"/><path d="M-12 75 65 17l77 58" fill="#d57b68" stroke="#735e47" stroke-width="4"/><rect x="52" y="112" width="30" height="65" rx="3" fill="#8d624d"/><rect x="12" y="100" width="28" height="30" rx="4" fill="#91b9ad"/><rect x="91" y="100" width="28" height="30" rx="4" fill="#91b9ad"/><rect x="35" y="58" width="60" height="23" rx="11" fill="#356650"/><text x="65" y="74" text-anchor="middle" fill="white" font-size="12" font-weight="800">MELLOW</text></g>
+          <g transform="translate(105 105)"><circle cx="50" cy="44" r="42" fill="#5d925f"/><circle cx="22" cy="55" r="28" fill="#6fa66c"/><circle cx="80" cy="58" r="31" fill="#77ab71"/><rect x="47" y="66" width="9" height="78" rx="4" fill="#71523c"/><path d="M13 141h103" stroke="#70533c" stroke-width="8"/><path d="M21 141v21M105 141v21" stroke="#70533c" stroke-width="7"/></g>
+          <g transform="translate(215 180)"><ellipse cx="52" cy="128" rx="39" ry="10" fill="#425b46" opacity=".18"/><path d="M25 54Q12 8 31 4Q48 11 42 58M61 58Q59 12 77 6Q92 21 75 64" fill="#fff6e9" stroke="#895b60" stroke-width="4"/><circle cx="51" cy="70" r="39" fill="#fff6e9" stroke="#895b60" stroke-width="4"/><path d="M33 69q6 7 12 0M59 69q6 7 12 0M44 87q8 10 16 0" fill="none" stroke="#895b60" stroke-width="4" stroke-linecap="round"/><path d="M25 103q26-18 52 0l8 31H17Z" fill="#e6b3aa" stroke="#895b60" stroke-width="4"/></g>
+          <g transform="translate(350 180)"><ellipse cx="52" cy="128" rx="39" ry="10" fill="#425b46" opacity=".18"/><path d="M28 54Q4 38 12 71Q19 84 31 67M74 54Q98 38 90 71Q83 84 71 67" fill="#c8803d" stroke="#68442e" stroke-width="4"/><circle cx="51" cy="70" r="39" fill="#efb95f" stroke="#68442e" stroke-width="4"/><path d="M33 69q6 7 12 0M59 69q6 7 12 0M44 87q8 10 16 0" fill="none" stroke="#68442e" stroke-width="4" stroke-linecap="round"/><path d="M25 103q26-18 52 0l8 31H17Z" fill="#ca8240" stroke="#68442e" stroke-width="4"/></g>
+          <g transform="translate(475 185)"><ellipse cx="52" cy="123" rx="39" ry="10" fill="#425b46" opacity=".18"/><path d="M20 55 22 12l28 29M82 55 80 12 52 41" fill="#80685f" stroke="#392f2d" stroke-width="4"/><circle cx="51" cy="67" r="39" fill="#80685f" stroke="#392f2d" stroke-width="4"/><path d="M32 65l13 3M58 68l13-3M45 85q7-5 15 0" fill="none" stroke="#392f2d" stroke-width="4" stroke-linecap="round"/><path d="M25 100q26-18 52 0l8 31H17Z" fill="#5f4a45" stroke="#392f2d" stroke-width="4"/></g>
+        </svg>
+      </div>
+      <div class="cover-bottom">
+        <div class="cover-loop"><span>대화</span>→<span>추론</span>→<span>결정</span>→<span>변화</span></div>
+        <div class="cover-meta">게임 소개 및 설명 문서<br>프로토타입 v1.0 · 개인 참여</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page">
+    <span class="kicker">01 · CONCEPT</span>
+    <h2>숫자를 읽는 대신,<br>사람의 말을 읽는 운영 게임</h2>
+    <p class="lead">기존 생활 시뮬레이션은 상태창으로 문제를 설명합니다. <b>마을의 목소리</b>는 시설·관계·사건을 주민 각자의 관점으로 번역해 들려주고, 플레이어가 그 말 사이의 공통점을 추론하게 합니다.</p>
+    <div class="contrast">
+      <article class="card old"><span class="kicker">기존 방식</span><h3>정답을 보여주는 상태창</h3><p>“공원 부족”, “관계도 25”, “행복도 45”처럼 세계의 수치를 직접 확인하고 최적의 버튼을 누릅니다.</p></article>
+      <div class="arrow">→</div>
+      <article class="card new"><span class="kicker">우리의 방식</span><h3>상태를 느끼게 하는 대화</h3><p>루루의 활기, 모카의 불만, 두부의 걱정을 함께 듣고 마을에 필요한 장소를 스스로 판단합니다.</p></article>
+    </div>
+    <div class="loop">
+      <article><div class="number">1</div><b>대화</b><small>주민에게 질문하고<br>서로 다른 관점을 듣기</small></article>
+      <article><div class="number">2</div><b>추론</b><small>수첩 속 단서에서<br>공통 문제 발견하기</small></article>
+      <article><div class="number">3</div><b>결정</b><small>효과 수치 없이<br>시설 하나 선택하기</small></article>
+      <article><div class="number">4</div><b>변화</b><small>코드가 시설·관계·<br>사건을 확정하기</small></article>
+      <article><div class="number">5</div><b>재대화</b><small>같은 주민의 달라진<br>반응으로 결과 확인</small></article>
+    </div>
+    <div class="grid3">
+      <div class="card"><h3>대화가 인터페이스</h3><p>AI 대사는 장식이 아니라 플레이에 필요한 정보를 얻는 핵심 수단입니다.</p></div>
+      <div class="card"><h3>진실은 코드가 관리</h3><p>AI는 시설·관계·결과를 결정하지 않습니다. 게임 상태를 주민답게 표현합니다.</p></div>
+      <div class="card"><h3>선택은 세 가지 결과</h3><p>공원·오락실·잡화점 모두 다른 상태와 후속 대화를 만들어 냅니다.</p></div>
+    </div>
+    <div class="note" style="margin-top:6mm"><b>핵심 메시지</b>　“NPC에게 말을 걸어야만 마을의 진짜 상태를 이해할 수 있다.”</div>
+    <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
+  </section>
+
+  <section class="page">
+    <span class="kicker">02 · PEOPLE & WORLD</span>
+    <h2>같은 마을, 세 개의 시선</h2>
+    <p class="lead">주민은 같은 사실을 알고 있어도 성격·욕구·관계에 따라 다른 말을 고릅니다. 세 사람의 말은 각각 불완전하지만, 함께 들으면 마을의 문제가 보입니다.</p>
+    <div class="grid3" style="margin-top:7mm">
+      <article class="card resident" data-animal="🐰" style="--resident-soft:#ffe1de"><small>햇살 같은 산책가</small><h3>루루 · 토끼</h3><p><b>활발함 · 사교적 · 솔직함</b><br>친구들과 몸을 움직이며 함께 놀고 싶다.</p><blockquote class="quote">“여럿이 오래 머물 만한 곳이 있으면 좋을 텐데!”</blockquote></article>
+      <article class="card resident" data-animal="🐶" style="--resident-soft:#ffedc7"><small>마을의 다정한 중재자</small><h3>두부 · 강아지</h3><p><b>다정함 · 눈치가 빠름 · 중재자</b><br>세 주민이 다시 자연스럽게 어울리길 바란다.</p><blockquote class="quote">“같은 곳에 있어도 각자 편할 수 있다면…”</blockquote></article>
+      <article class="card resident" data-animal="🐱" style="--resident-soft:#eadbd2"><small>조용한 카페 단골</small><h3>모카 · 고양이</h3><p><b>무뚝뚝함 · 자존심 · 섬세함</b><br>사람들과 부딪히지 않고 편하게 쉬고 싶다.</p><blockquote class="quote">“그냥 바람 쐴 곳이나 있었으면 좋겠어.”</blockquote></article>
+    </div>
+    <div class="world">
+      <article class="card">
+        <span class="kicker">STARTING WORLD</span><h3>처음부터 존재하는 진실</h3>
+        <div class="state-list">
+          <div><b>시설</b><span>카페 있음 · 나머지 없음</span></div>
+          <div><b>최근 사건</b><span>붐비는 카페에서 말다툼</span></div>
+          <div><b>루루 ↔ 모카</b><span>어색하고 좋지 않은 사이</span></div>
+          <div><b>두부의 입장</b><span>둘 사이를 걱정하는 중재자</span></div>
+        </div>
+        <p class="muted" style="margin:4mm 0 0">행복도와 관계도는 내부적으로 존재하지만 일반 플레이 화면에는 표시하지 않습니다.</p>
+      </article>
+      <article class="card">
+        <span class="kicker">CONVERSATION NOTE</span><h3>정답 대신 남는 단서</h3>
+        <ul class="check">
+          <li>루루는 함께 어울릴 곳을 찾는다.</li>
+          <li>모카는 편히 숨 돌릴 곳이 필요하다.</li>
+          <li>두부는 자연스럽게 마주칠 계기를 바란다.</li>
+        </ul>
+        <div class="note" style="margin-top:4mm">“서로 원하는 건 달라도, 모두에게 필요한 공간은 하나일지도 몰라.”</div>
+      </article>
+    </div>
+    <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
+  </section>
+
+  <section class="page">
+    <span class="kicker">03 · HOW TO PLAY</span>
+    <h2>3분 안에 완성되는<br>하나의 변화</h2>
+    <div class="grid2" style="margin-bottom:6mm">
+      <div class="card"><h3>목표</h3><p>주민들의 말에서 공통된 문제를 찾고, 마을에 시설 하나를 건설한 뒤 달라진 반응을 확인합니다.</p></div>
+      <div class="card"><h3>조작</h3><p><b>마우스 클릭 또는 터치</b>로 모든 조작을 수행합니다. 추천 질문 버튼과 40자 이내의 직접 질문을 지원합니다.</p></div>
+    </div>
+    <div class="steps">
+      <article><b>시작 안내 닫기</b><p>“마을의 이야기 듣기”를 누르면 마을 전경이 열립니다.</p></article>
+      <article><b>주민 선택</b><p>루루·두부·모카를 눌러 현재 상태가 반영된 이야기를 듣습니다.</p></article>
+      <article><b>질문 이어가기</b><p>추천 질문을 누르거나 짧은 질문을 직접 입력합니다.</p></article>
+      <article><b>대화 수첩 확인</b><p>이미 들은 단서를 모아 주민들 말의 공통점을 찾습니다.</p></article>
+      <article><b>개발 회의 열기</b><p>두 주민 이상과 대화하면 시설 선택이 활성화됩니다.</p></article>
+      <article><b>시설 한 번 선택</b><p>효과 수치 없이 공원·오락실·잡화점 중 하나를 결정합니다.</p></article>
+      <article><b>다시 대화하기</b><p>달라진 마을에서 주민 두 명 이상의 새로운 반응을 듣습니다.</p></article>
+      <article><b>결과 확인</b><p>“변화 돌아보기”에서 Before/After와 선택의 의미를 확인하면 한 판이 끝납니다.</p></article>
+    </div>
+    <h3 style="margin-top:7mm">한 번뿐인 마을 결정</h3>
+    <div class="grid3">
+      <article class="card facility" style="--accent:#4d855c"><div class="icon">♧</div><h3>느티나무 공원</h3><p>나무 그늘과 긴 벤치가 있는 열린 쉼터. 서로 다른 속도로 쉬면서 같은 풍경을 나눕니다.</p></article>
+      <article class="card facility" style="--accent:#7764a6"><div class="icon">★</div><h3>별빛 오락실</h3><p>루루는 크게 즐거워하지만 소리에 민감한 모카는 더 멀어질 수 있습니다.</p></article>
+      <article class="card facility" style="--accent:#d08b43"><div class="icon">▣</div><h3>마을 잡화점</h3><p>생활은 편리해지지만 함께 머무는 시간이 생기지는 않아 관계는 그대로입니다.</p></article>
+    </div>
+    <div class="note" style="margin-top:5mm"><b>종료 조건</b>　시설 선택 후 주민 두 명 이상의 변화 반응을 듣고 결과 화면을 열면 완료됩니다. “다른 선택 해보기”로 즉시 재시작할 수 있습니다.</div>
+    <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
+  </section>
+
+  <section class="page">
+    <span class="kicker">04 · BEFORE / AFTER</span>
+    <h2>플레이어의 판단이<br>주민의 다음 문장을 바꾼다</h2>
+    <p class="lead">AI가 결과를 정하는 것이 아닙니다. 시설 버튼을 누르는 순간 게임 코드가 시설·행복·관계·최근 사건을 갱신하고, 다음 대화는 그 새로운 진실을 전달합니다.</p>
+    <div class="timeline">
+      <article class="scene"><span class="label">BEFORE</span><h3>모카 · 불만</h3><blockquote class="quote">“카페에 모두 몰리니까 조용할 날이 없잖아. 루루랑 마주치면 또 시끄러워질 것 같고…”</blockquote><p class="muted" style="margin:4mm 0 0">공원 없음 · 루루와 관계가 좋지 않음 · 카페 말다툼 직후</p></article>
+      <div class="decision">공원<br>건설</div>
+      <article class="scene after"><span class="label">AFTER</span><h3>모카 · 기쁨</h3><blockquote class="quote">“공원, 생각보다 나쁘지 않더라. 루루도 나무 그늘에선 조금 조용했고… 어제는 꽤 오래 이야기했어.”</blockquote><p class="muted" style="margin:4mm 0 0">공원 생김 · 루루와 관계 개선 · 벤치에서 대화한 새 사건</p></article>
+    </div>
+    <h3>선택별로 분명하게 갈리는 결과</h3>
+    <div class="result-row"><b>느티나무 공원</b><span>루루와 모카의 관계가 크게 개선됩니다. “서로의 속도가 만나는 곳”이라는 긍정적 결과로 이어집니다.</span></div>
+    <div class="result-row"><b>별빛 오락실</b><span>루루는 즐겁지만 모카는 소음 때문에 떠납니다. 한 주민의 큰 목소리만 들은 결과가 드러납니다.</span></div>
+    <div class="result-row"><b>마을 잡화점</b><span>세 주민의 생활은 조금 편리해지지만 핵심 관계는 변하지 않습니다. 표면의 불편을 고른 결과입니다.</span></div>
+    <div class="grid2" style="margin-top:6mm">
+      <div class="card"><span class="kicker">VISIBLE FEEDBACK</span><h3>숫자를 숨겨도 변화는 보이게</h3><ul class="check"><li>빈 공터에 선택한 시설이 등장</li><li>공원 선택 시 루루·모카가 가까워짐</li><li>감정 표정과 대사 내용이 달라짐</li><li>Before/After 인용문으로 결과 회고</li></ul></div>
+      <div class="card"><span class="kicker">REPLAY VALUE</span><h3>다른 선택, 다른 관점</h3><p>세 선택은 성공·부분 성공·문제 미해결의 서로 다른 상태를 만듭니다. 같은 주민에게 같은 질문을 해도 선택한 시설과 최근 사건에 따라 다른 이야기를 들을 수 있습니다.</p><div class="note">정답 버튼을 누르는 시연이 아니라, 누구의 말을 어떻게 해석했는지를 되돌아보는 짧은 사회적 추론입니다.</div></div>
+    </div>
+    <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
+  </section>
+
+  <section class="page">
+    <span class="kicker">05 · RUN & SUBMISSION</span>
+    <h2>링크 클릭 한 번으로<br>바로 플레이</h2>
+    <div class="grid2">
+      <a class="linkbox" href="https://jinjinjin459.github.io/nan2026-village-voices/"><b>▶ 플레이 가능한 웹 빌드</b><span>https://jinjinjin459.github.io/nan2026-village-voices/</span></a>
+      <a class="linkbox" href="https://github.com/jinjinjin459/nan2026-village-voices"><b>⌘ 전체 소스 코드</b><span>https://github.com/jinjinjin459/nan2026-village-voices</span></a>
+    </div>
+    <div class="grid2" style="margin-top:6mm">
+      <article class="card"><h3>심사자 실행 방법</h3><ol><li>Chrome, Edge, Safari 등 최신 브라우저에서 플레이 링크를 엽니다.</li><li>“마을의 이야기 듣기”를 누릅니다.</li><li>별도 설치·로그인·API 키 입력 없이 전체 핵심 루프를 진행합니다.</li></ol><p class="note">권장 화면: 가로 1280px 이상. 모바일·터치 조작도 지원합니다.</p></article>
+      <article class="card"><h3>로컬 소스 실행</h3><div class="command">npm ci
+npm run dev
+
+# 제작용 빌드 검증
+npm run build
+npm start</div><p class="muted" style="margin:3mm 0 0">Node.js 20.19 이상 또는 22.12 이상 권장. 환경 변수 없이 실행하면 검증된 안전 대사 모드로 동작합니다.</p></article>
+    </div>
+    <div class="grid2" style="margin-top:6mm">
+      <article class="card"><h3>AI 연결 모드</h3><p>서버 환경 변수 <code>GEMINI_API_KEY</code>가 설정되고 API가 정상일 때 Gemini 3.6 Flash가 현재 상태를 반영한 대사를 생성합니다. 키는 클라이언트 코드에 포함하지 않습니다.</p><p class="note">응답 지연·API 오류·형식 오류 시 시설과 단계에 맞는 검증 대사로 자동 전환되어 플레이가 중단되지 않습니다.</p></article>
+      <article class="card"><h3>플레이 동영상</h3><p><b>30~60초 실제 플레이 영상</b>은 별도 제작 대상입니다.</p><div class="note" style="font-size:10pt"><b>YouTube 업로드 후 제출 폼에 기재</b></div><p class="muted" style="margin:3mm 0 0">영상에는 시작 → 주민 대화 → 시설 선택 → 변화한 대화 → 결과를 포함합니다.</p></article>
+    </div>
+    <h3 style="margin-top:7mm">프로토타입 범위와 제출 상태</h3>
+    <div class="scope">
+      <div class="in"><b>구현 완료 범위</b><p>주민 3명 · 질문형 대화 · 대화 수첩 · 시설 3종 · 결정론적 상태 변경 · 표정/건설 연출 · Before/After 결과 · AI/안전 대사 이중 경로</p></div>
+      <div class="out"><b>의도적으로 제외한 범위</b><p>자유 이동 · 인벤토리 · 경제 · 저장/계정 · 날씨/시간 · NPC 스케줄 · 장기 기억 · NPC 간 자율 대화 · 멀티플레이</p></div>
+    </div>
+    <div class="note" style="margin-top:5mm"><b>브라우저 문제 해결</b>　화면이 갱신되지 않으면 강력 새로고침 후 다시 접속합니다. AI 연결 표시가 “안전 데모”여도 게임의 상태 변화와 모든 결말은 동일하게 플레이할 수 있습니다.</div>
+    <div class="folio"><b>마을의 목소리 · 게임 소개</b><span class="num"></span></div>
+  </section>
+</body>
+</html>
